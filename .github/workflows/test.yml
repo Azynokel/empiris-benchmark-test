@@ -7,6 +7,7 @@ jobs:
     name: Run JavaScript benchmark example
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Store benchmark result
         uses: ./
         with:
