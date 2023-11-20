@@ -1,0 +1,13 @@
+name: Benchmark.js Example
+on:
+  push:
+
+jobs:
+  benchmark:
+    name: Run JavaScript benchmark example
+    runs-on: ubuntu-latest
+    steps:
+      - name: Store benchmark result
+        uses: ./
+        with:
+          name: Test
