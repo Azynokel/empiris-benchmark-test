@@ -8,8 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+      # - uses: hashicorp/setup-terraform@v2
+
       - name: Store benchmark result
         uses: ./
         with:
-          name: Test
-          apiKey: "test"
+          benchmark: inch
+          api_key: "pk_3ZJUfUPMDrrrpLrejfAahPe9"
+          inch_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
