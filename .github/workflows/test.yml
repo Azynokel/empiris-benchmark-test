@@ -18,4 +18,4 @@ jobs:
         with:
           benchmark: inch
           api_key: "pk_3ZJUfUPMDrrrpLrejfAahPe9"
-          inch_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
+          influx_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
