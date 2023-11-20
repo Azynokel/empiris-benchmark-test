@@ -12,3 +12,4 @@ jobs:
         uses: ./
         with:
           name: Test
+          apiKey: "test"

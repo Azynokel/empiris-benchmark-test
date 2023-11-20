@@ -16,6 +16,9 @@ devDependencies:
   '@types/node':
     specifier: ^20.9.2
     version: 20.9.2
+  '@vercel/ncc':
+    specifier: ^0.38.1
+    version: 0.38.1
   typescript:
     specifier: ^5.2.2
     version: 5.2.2
@@ -45,6 +48,11 @@ packages:
     resolution: {integrity: sha512-WHZXKFCEyIUJzAwh3NyyTHYSR35SevJ6mZ1nWwJafKtiQbqRTIKSRcw3Ma3acqgsent3RRDqeVwpHntMk+9irg==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
+
+  /@vercel/ncc@0.38.1:
+    resolution: {integrity: sha512-IBBb+iI2NLu4VQn3Vwldyi2QwaXt5+hTyh58ggAMoCGE6DJmPvwL3KPBWcJl1m9LYPChBLE980Jw+CS4Wokqxw==}
+    hasBin: true
     dev: true
 
   /tunnel@0.0.6:
