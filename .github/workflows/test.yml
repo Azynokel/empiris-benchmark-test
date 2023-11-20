@@ -4,7 +4,7 @@ on:
 
 jobs:
   benchmark:
-    name: Run JavaScript benchmark example
+    name: Run example
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,7 +13,7 @@ jobs:
           go-version: "stable"
       # - uses: hashicorp/setup-terraform@v2
 
-      - name: Store benchmark result
+      - name: Run inch
         uses: ./
         with:
           benchmark: inch
