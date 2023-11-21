@@ -12,8 +12,11 @@ export type TimeSeriesMetric = {
 
 export type Metric = DataframeMetric | TimeSeriesMetric;
 
-export interface BenchmarkAdapter<T extends string> {
+export interface BenchmarkAdapter<
+  T extends string,
+  O extends Record<string, string | number | boolean | undefined>
+> {
   name: T;
   setup: () => Promise<void>;
-  run: (args: string[]) => Promise<Metric[]>;
+  run: (options: Omit<O, "name">) => Promise<Metric[]>;
 }

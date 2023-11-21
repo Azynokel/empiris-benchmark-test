@@ -1,4 +1,4 @@
-name: Benchmark.js Example
+name: Example
 on:
   push:
 
@@ -15,7 +15,9 @@ jobs:
 
       - name: Run inch
         uses: ./
-        with:
-          benchmark: inch
+        env:
           api_key: "pk_3ZJUfUPMDrrrpLrejfAahPe9"
           influx_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
+          # TODO: This should come from the outputs of a terraform setup
+          influx_host: http://localhost:8086
+          # influx_host: tf.outputs.influx_ip

@@ -3,16 +3,8 @@ author: "EMPIRIS developers <https://github.com/ADSP-EMPIRIS>"
 description: "The EMPIRIS benchmarking action"
 
 inputs:
-  api_key:
-    description: "API Key to visulization component"
-    required: false
-
-  benchmark:
-    description: "Name of the benchmark to use"
-    required: true
-
-  influx_token:
-    description: "InfluxDB token to access Database"
+  config_path:
+    description: "Path to the EMPIRIS config"
     required: false
 
 runs:

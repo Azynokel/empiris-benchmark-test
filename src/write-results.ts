@@ -10,7 +10,6 @@ export async function createExperimentRun({
   apiKey,
 }: {
   basePath: string;
-  experimentId: string;
   apiKey: string;
 }) {
   const response = await client.post(
