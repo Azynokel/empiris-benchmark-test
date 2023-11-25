@@ -7,12 +7,14 @@ import { InchConfig } from "../config";
  * @param _out The output of inch
  * @returns A list of metrics
  */
-function parseOutput(_out: string): Metric[] {
+export function parseOutput(_out: string): Metric[] {
+  // Initialize metrics
+  const metrics: Metric[] = [];
   // Split the output into lines
   const lines = _out.split('\n');
 
   // Initialize metrics
-  let totalPoints = 0;
+  // let totalPoints = 0;
   let totalThroughput = 0;
   let currentThroughput = 0;
   let errors = 0;
@@ -26,10 +28,9 @@ function parseOutput(_out: string): Metric[] {
     // Check if the line contains metrics
     if (line.startsWith('T=')) {
       // Extract the metrics
-      //const match = line.match(/(\d+) points written.*Total throughput: (\d+\.\d+).*Current throughput: (\d+\.\d+).*Errors: (\d+).*μ: (\d+\.\d+)ms, 90%: (\d+\.\d+)ms, 95%: (\d+\.\d+)ms, 99%: (\d+\.\d+)ms/);
       const match = line.match(/T=\d+ (\d+) points written.*Total throughput: (\d+\.\d+).*Current throughput: (\d+(?:\.\d+)?).*Errors: (\d+)(?: \| μ: (\d+\.\d+)ms, 90%: (\d+\.\d+)ms, 95%: (\d+\.\d+)ms, 99%: (\d+\.\d+)ms)?/);
       if (match) {
-        totalPoints = parseInt(match[1]);
+        // totalPoints = parseInt(match[1]);
         totalThroughput = parseFloat(match[2]);
         currentThroughput = parseFloat(match[3]);
         errors = parseInt(match[4]);
@@ -38,19 +39,18 @@ function parseOutput(_out: string): Metric[] {
         p95Latency = parseFloat(match[7]);
         p99Latency = parseFloat(match[8]);
       }
+      // Create DataframeMetric objects and add them to the list of metrics
+      metrics.push(
+        { type: 'dataframe', metric: 'throughput', value: totalThroughput, unit: 'pt/sec', specifier: 'total' },
+        { type: 'dataframe', metric: 'throughput', value: currentThroughput, unit: 'val/sec', specifier: 'current' },
+        { type: 'dataframe', metric: 'error_rate', value: errors, unit: 'errors', specifier: null },
+        { type: 'dataframe', metric: 'latency', value: avgLatency, unit: 'ms', specifier: 'μ' },
+        { type: 'dataframe', metric: 'latency', value: p90Latency, unit: 'ms', specifier: '90%' },
+        { type: 'dataframe', metric: 'latency', value: p95Latency, unit: 'ms', specifier: '95%' },
+        { type: 'dataframe', metric: 'latency', value: p99Latency, unit: 'ms', specifier: '99%' },
+      );
     }
   }
-
-  // Create DataframeMetric objects
-  const metrics: Metric[] = [
-    { type: 'dataframe', metric: 'throughput', value: totalThroughput, unit: 'pt/sec', specifier: 'total' },
-    { type: 'dataframe', metric: 'throughput', value: currentThroughput, unit: 'val/sec', specifier: 'current' },
-    { type: 'dataframe', metric: 'error_rate', value: errors, unit: 'errors', specifier: null },
-    { type: 'dataframe', metric: 'latency', value: avgLatency, unit: 'ms', specifier: 'μ' },
-    { type: 'dataframe', metric: 'latency', value: p90Latency, unit: 'ms', specifier: '90%' },
-    { type: 'dataframe', metric: 'latency', value: p95Latency, unit: 'ms', specifier: '95%' },
-    { type: 'dataframe', metric: 'latency', value: p99Latency, unit: 'ms', specifier: '99%' },
-  ];
 
   return metrics;
 }
