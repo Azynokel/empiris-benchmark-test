@@ -12,6 +12,8 @@ jobs:
         with:
           go-version: "stable"
       # - uses: hashicorp/setup-terraform@v2
+      - name: Start influx
+        run: docker run -d -p 8086:8086 -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw== -v myInfluxVolume:/var/lib/influxdb2 influxdb:latest
 
       - name: Run inch
         uses: ./
