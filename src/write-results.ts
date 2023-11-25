@@ -68,7 +68,7 @@ export async function writeDataframeMetrics({
   dataframes: DataframeMetric[];
   apiKey: string;
 }) {
-  const response = await client.post(
+  await client.post(
     `https://${basePath}/api/dataframe`,
     JSON.stringify({
       experimentRunId,
@@ -83,6 +83,4 @@ export async function writeDataframeMetrics({
       authorization: `Bearer ${apiKey}`,
     }
   );
-
-  console.log(await response.readBody());
 }
