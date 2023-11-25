@@ -4,7 +4,6 @@ import { DataframeMetric, TimeSeriesMetric, Metric } from "./types";
 
 const client = new http.HttpClient();
 
-// TODO
 export async function createExperimentRun({
   basePath,
   apiKey,
@@ -13,8 +12,11 @@ export async function createExperimentRun({
   apiKey: string;
 }) {
   const response = await client.post(
-    `https://${basePath}/api/experiment/runs`,
-    "",
+    `https://${basePath}/api/experiment/run`,
+    JSON.stringify({
+      name: "Test",
+      description: "",
+    }),
     {
       authorization: `Bearer ${apiKey}`,
     }
@@ -22,7 +24,7 @@ export async function createExperimentRun({
 
   const body = await response.readBody();
 
-  return JSON.parse(body).id;
+  return JSON.parse(body).id as number;
 }
 
 export async function writeMetrics(
@@ -66,7 +68,7 @@ export async function writeDataframeMetrics({
   dataframes: DataframeMetric[];
   apiKey: string;
 }) {
-  await client.post(
+  const response = await client.post(
     `https://${basePath}/api/dataframe`,
     JSON.stringify({
       experimentRunId,
@@ -81,4 +83,6 @@ export async function writeDataframeMetrics({
       authorization: `Bearer ${apiKey}`,
     }
   );
+
+  console.log(await response.readBody());
 }

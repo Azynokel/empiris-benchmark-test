@@ -38036,19 +38036,80 @@ exports.NEVER = parseUtil_1.INVALID;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.inchAdapter = void 0;
+exports.inchAdapter = exports.parseOutput = void 0;
 const exec_1 = __nccwpck_require__(7775);
+/**
+ * Parse the output of inch and return a list of metrics
+ * @param _out The output of inch
+ * @returns A list of metrics
+ */
 function parseOutput(_out) {
-    // TODO: Turn out into metrics
-    return [];
+    // Initialize metrics
+    const metrics = [];
+    // Split the output into lines
+    const lines = _out.split("\n");
+    // Initialize metrics
+    // let totalPoints = 0;
+    let totalThroughput = 0;
+    let currentThroughput = 0;
+    let errors = 0;
+    /*let avgLatency = 0;
+    let p90Latency = 0;
+    let p95Latency = 0;
+    let p99Latency = 0; */
+    // Process each line
+    for (const line of lines) {
+        // Check if the line contains metrics
+        if (line.startsWith("T=")) {
+            // Extract the metrics
+            const match = line.match(/T=\d+ (\d+) points written.*Total throughput: (\d+\.\d+).*Current throughput: (\d+(?:\.\d+)?).*Errors: (\d+)(?: \| μ: (\d+\.\d+)ms, 90%: (\d+\.\d+)ms, 95%: (\d+\.\d+)ms, 99%: (\d+\.\d+)ms)?/);
+            if (match) {
+                // totalPoints = parseInt(match[1]);
+                totalThroughput = parseFloat(match[2]);
+                currentThroughput = parseFloat(match[3]);
+                errors = parseInt(match[4]);
+                /* avgLatency = parseFloat(match[5]);
+                p90Latency = parseFloat(match[6]);
+                p95Latency = parseFloat(match[7]);
+                p99Latency = parseFloat(match[8]); */
+            }
+            // Create DataframeMetric objects and add them to the list of metrics
+            metrics.push({
+                type: "dataframe",
+                metric: "throughput",
+                value: totalThroughput,
+                unit: "pt/sec",
+                specifier: "total",
+            }, {
+                type: "dataframe",
+                metric: "throughput",
+                value: currentThroughput,
+                unit: "val/sec",
+                specifier: "current",
+            }, {
+                type: "dataframe",
+                metric: "error_rate",
+                value: errors,
+                unit: "errors",
+                specifier: null,
+            }
+            /* { type: 'dataframe', metric: 'latency', value: avgLatency, unit: 'ms', specifier: 'μ' },
+            { type: 'dataframe', metric: 'latency', value: p90Latency, unit: 'ms', specifier: '90%' },
+            { type: 'dataframe', metric: 'latency', value: p95Latency, unit: 'ms', specifier: '95%' },
+            { type: 'dataframe', metric: 'latency', value: p99Latency, unit: 'ms', specifier: '99%' }, */
+            );
+        }
+    }
+    return metrics;
 }
+exports.parseOutput = parseOutput;
 exports.inchAdapter = {
     name: "inch",
     setup: async () => {
         // Install inch locally
         await (0, exec_1.exec)("go install github.com/influxdata/inch/cmd/inch@latest");
     },
-    run: async ({ influx_token, version, database }) => {
+    run: async ({ influx_token, version, database, host }) => {
         // Run inch
         let output = "";
         await (0, exec_1.exec)("inch", [
@@ -38058,6 +38119,8 @@ exports.inchAdapter = {
             "-v",
             "-db",
             database,
+            "-host",
+            host,
         ], {
             listeners: {
                 stdout: (data) => {
@@ -38253,12 +38316,20 @@ async function main() {
     // Run the Benchmark
     // We assume here that the SUT is already running and available, we don't do the setup here
     const metrics = await adapter.run(rest);
-    // const id = await createExperimentRun({ apiKey, basePath: apiBaseUrl });
-    if (api_key) {
+    if (metrics.length === 0) {
+        core.warning("No metrics were collected");
+    }
+    else if (api_key) {
+        const id = await (0, write_results_1.createExperimentRun)({
+            apiKey: api_key,
+            basePath: api_base_url,
+        });
+        core.info("Experiment run id: " + id);
+        core.info("Writing metrics to Empiris API: " + JSON.stringify(metrics));
         // Write the results to the Empiris API
         await (0, write_results_1.writeMetrics)(metrics, {
             basePath: api_base_url,
-            experimentRunId: 3,
+            experimentRunId: id,
             apiKey: api_key,
         });
     }
@@ -38304,9 +38375,11 @@ exports.writeDataframeMetrics = exports.writeMetrics = exports.createExperimentR
 const http = __importStar(__nccwpck_require__(1759));
 const core = __importStar(__nccwpck_require__(9093));
 const client = new http.HttpClient();
-// TODO
 async function createExperimentRun({ basePath, apiKey, }) {
-    const response = await client.post(`https://${basePath}/api/experiment/runs`, "", {
+    const response = await client.post(`https://${basePath}/api/experiment/run`, JSON.stringify({
+        name: "Test",
+        description: "",
+    }), {
         authorization: `Bearer ${apiKey}`,
     });
     const body = await response.readBody();
@@ -38330,7 +38403,7 @@ async function writeMetrics(metrics, { basePath, experimentRunId, apiKey, }) {
 }
 exports.writeMetrics = writeMetrics;
 async function writeDataframeMetrics({ basePath, dataframes, experimentRunId, apiKey, }) {
-    await client.post(`https://${basePath}/api/dataframe`, JSON.stringify({
+    const response = await client.post(`https://${basePath}/api/dataframe`, JSON.stringify({
         experimentRunId,
         data: dataframes.map(({ metric, specifier, unit, value }) => [
             metric,
@@ -38341,6 +38414,7 @@ async function writeDataframeMetrics({ basePath, dataframes, experimentRunId, ap
     }), {
         authorization: `Bearer ${apiKey}`,
     });
+    console.log(await response.readBody());
 }
 exports.writeDataframeMetrics = writeDataframeMetrics;
 
