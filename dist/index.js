@@ -38374,22 +38374,50 @@ main().catch((e) => core.setFailed(e.message));
 /***/ }),
 
 /***/ 442:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.waitOn = void 0;
+const http = __importStar(__nccwpck_require__(1759));
+const client = new http.HttpClient();
+function isStatusOk(response) {
+    return response.message.statusCode === 200;
+}
 // Default timeout is 2 minutes
 const DEFAULT_TIMEOUT = 2 * 60 * 1000;
 async function waitOn({ ressources, timeout = DEFAULT_TIMEOUT, delay = 5000, }) {
     const start = Date.now();
     const end = start + timeout;
     while (Date.now() < end) {
-        const promises = ressources.map((url) => fetch(url));
+        const promises = ressources.map((url) => client.get(url));
         try {
             const responses = await Promise.all(promises);
-            const allOk = responses.every((response) => response.ok);
+            const allOk = responses.every((response) => isStatusOk(response));
             if (allOk) {
                 return;
             }
