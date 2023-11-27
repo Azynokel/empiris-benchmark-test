@@ -25,7 +25,7 @@ jobs:
         id: start-influx
         working-directory: ./tf
         run: |
-          TF_VAR_gcp_project=$GCP_PROJECT_ID terraform apply -auto-approve
+          TF_VAR_gcp_project=empiris terraform apply -auto-approve
           ip_address=$(terraform output -raw ip)
           echo $ip_address
           echo "IP_ADDRESS=$ip_address" >> "$GITHUB_OUTPUT"
@@ -44,7 +44,7 @@ jobs:
       - name: Destroy influx
         # Make sure infrastructure is destroyed even in case of previous failures
         if: always()
-        run: TF_VAR_gcp_project=$GCP_PROJECT_ID terraform destroy -auto-approve
+        run: TF_VAR_gcp_project=empiris terraform destroy -auto-approve
         working-directory: ./tf
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
