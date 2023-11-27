@@ -11,15 +11,42 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "stable"
-      # - uses: hashicorp/setup-terraform@v2
+      - uses: hashicorp/setup-terraform@v3
+      # Only for local windows testing necessary
+      - name: fix terraform file permissions
+        run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
+
+      - run: terraform init
+        working-directory: ./tf
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
       - name: Start influx
-        run: docker run -d -p 8086:8086 -e DOCKER_INFLUXDB_INIT_MODE=setup -e DOCKER_INFLUXDB_INIT_USERNAME=admin -e DOCKER_INFLUXDB_INIT_PASSWORD=12345678 -e DOCKER_INFLUXDB_INIT_ORG=test -e DOCKER_INFLUXDB_INIT_BUCKET=test -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw== -v myInfluxVolume:/var/lib/influxdb2 influxdb:latest
+        id: start-influx
+        working-directory: ./tf
+        run: |
+          TF_VAR_gcp_project=$GCP_PROJECT_ID terraform apply -auto-approve
+          ip_address=$(terraform output -raw ip)
+          echo $ip_address
+          echo "IP_ADDRESS=$ip_address" >> "$GITHUB_OUTPUT"
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
+        # run: docker run -d -p 8086:8086 -e DOCKER_INFLUXDB_INIT_MODE=setup -e DOCKER_INFLUXDB_INIT_USERNAME=admin -e DOCKER_INFLUXDB_INIT_PASSWORD=12345678 -e DOCKER_INFLUXDB_INIT_ORG=test -e DOCKER_INFLUXDB_INIT_BUCKET=test -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw== -v myInfluxVolume:/var/lib/influxdb2 influxdb:latest
 
       - name: Run inch
         uses: ./
         env:
-          api_key: "pk_3ZJUfUPMDrrrpLrejfAahPe9"
+          api_key: ${{ secrets.EMPIRIS_API_KEY }}
           influx_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
-          # TODO: This should come from the outputs of a terraform setup
-          influx_host: http://localhost:8086
-          # influx_host: tf.outputs.influx_ip
+          # influx_host: http://localhost:8086
+          influx_host: "http://${{ steps.start-influx.outputs.IP_ADDRESS }}:8086"
+
+      - name: Destroy influx
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
+        run: TF_VAR_gcp_project=$GCP_PROJECT_ID terraform destroy -auto-approve
+        working-directory: ./tf
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}

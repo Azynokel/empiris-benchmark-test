@@ -38031,13 +38031,38 @@ exports.NEVER = parseUtil_1.INVALID;
 /***/ }),
 
 /***/ 5800:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.inchAdapter = exports.parseOutput = void 0;
 const exec_1 = __nccwpck_require__(7775);
+const core = __importStar(__nccwpck_require__(9093));
+const utils_1 = __nccwpck_require__(442);
 /**
  * Parse the output of inch and return a list of metrics
  * @param _out The output of inch
@@ -38110,6 +38135,12 @@ exports.inchAdapter = {
         await (0, exec_1.exec)("go install github.com/influxdata/inch/cmd/inch@latest");
     },
     run: async ({ influx_token, version, database, host }) => {
+        // Wait for the database to be ready
+        core.info(`Waiting for ${host} to be ready...`);
+        await (0, utils_1.waitOn)({
+            ressources: [`${host}/health`],
+        });
+        core.info(`Running inch...`);
         // Run inch
         let output = "";
         await (0, exec_1.exec)("inch", [
@@ -38241,7 +38272,7 @@ const inchConfig = z.object({
         .optional()
         .default(2),
     database: z.string().optional().default("empiris"),
-    host: z.string().optional().default("http://localhost:8086"),
+    host: z.string().min(1).optional().default("http://localhost:8086"),
 });
 const tsbsConfig = z.object({
     name: z.literal("tsbs"),
@@ -38258,7 +38289,7 @@ async function getConfig() {
     const configFile = await (0, promises_1.readFile)(path_1.default.join(process.cwd(), configPath === "" ? "empiris.yml" : configPath), "utf8");
     const parsedConfig = configSchema.safeParse((0, yaml_1.parse)(configFile));
     if (!parsedConfig.success) {
-        throw new Error("Invalid config file");
+        throw new Error("Invalid config");
     }
     return injectEnvVarsRecursive(parsedConfig.data);
 }
@@ -38342,6 +38373,37 @@ main().catch((e) => core.setFailed(e.message));
 
 /***/ }),
 
+/***/ 442:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.waitOn = void 0;
+// Default timeout is 2 minutes
+const DEFAULT_TIMEOUT = 2 * 60 * 1000;
+async function waitOn({ ressources, timeout = DEFAULT_TIMEOUT, delay = 5000, }) {
+    const start = Date.now();
+    const end = start + timeout;
+    while (Date.now() < end) {
+        const promises = ressources.map((url) => fetch(url));
+        try {
+            const responses = await Promise.all(promises);
+            const allOk = responses.every((response) => response.ok);
+            if (allOk) {
+                return;
+            }
+        }
+        catch (_e) { }
+        await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+    throw new Error(`Timeout after ${timeout}ms`);
+}
+exports.waitOn = waitOn;
+
+
+/***/ }),
+
 /***/ 4413:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -38403,7 +38465,7 @@ async function writeMetrics(metrics, { basePath, experimentRunId, apiKey, }) {
 }
 exports.writeMetrics = writeMetrics;
 async function writeDataframeMetrics({ basePath, dataframes, experimentRunId, apiKey, }) {
-    const response = await client.post(`https://${basePath}/api/dataframe`, JSON.stringify({
+    await client.post(`https://${basePath}/api/dataframe`, JSON.stringify({
         experimentRunId,
         data: dataframes.map(({ metric, specifier, unit, value }) => [
             metric,
@@ -38414,7 +38476,6 @@ async function writeDataframeMetrics({ basePath, dataframes, experimentRunId, ap
     }), {
         authorization: `Bearer ${apiKey}`,
     });
-    console.log(await response.readBody());
 }
 exports.writeDataframeMetrics = writeDataframeMetrics;
 

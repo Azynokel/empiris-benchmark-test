@@ -1,6 +1,8 @@
 import { exec } from "@actions/exec";
+import * as core from "@actions/core";
 import { BenchmarkAdapter, Metric } from "../types";
 import { InchConfig } from "../config";
+import { waitOn } from "../utils";
 
 /**
  * Parse the output of inch and return a list of metrics
@@ -84,6 +86,15 @@ export const inchAdapter: InchAdapter = {
     await exec("go install github.com/influxdata/inch/cmd/inch@latest");
   },
   run: async ({ influx_token, version, database, host }) => {
+    // Wait for the database to be ready
+    core.info(`Waiting for ${host} to be ready...`);
+
+    await waitOn({
+      ressources: [`${host}/health`],
+    });
+
+    core.info(`Running inch...`);
+
     // Run inch
     let output = "";
     await exec(

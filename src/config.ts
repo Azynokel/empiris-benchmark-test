@@ -42,7 +42,7 @@ const inchConfig = z.object({
     .optional()
     .default(2),
   database: z.string().optional().default("empiris"),
-  host: z.string().optional().default("http://localhost:8086"),
+  host: z.string().min(1).optional().default("http://localhost:8086"),
 });
 
 export type InchConfig = z.infer<typeof inchConfig>;
@@ -73,7 +73,7 @@ export async function getConfig() {
   const parsedConfig = configSchema.safeParse(parse(configFile));
 
   if (!parsedConfig.success) {
-    throw new Error("Invalid config file");
+    throw new Error("Invalid config");
   }
 
   return injectEnvVarsRecursive(parsedConfig.data);
