@@ -1,9 +1,17 @@
 benchmark:
-  name: inch
+  tool: inch
   version: 2
   influx_token: "{{ $env.influx_token }}"
   host: "{{ $env.influx_host }}"
   database: test
+
+# benchmark:
+#   tool: tsbs
+#   sut: timescaledb
+#   username: admin
+#   password: "{{ $env.influx_token }}"
+#   host: "{{ $env.influx_host }}"
+#   database: test
 
 visualization:
   api_key: "{{ $env.api_key }}"

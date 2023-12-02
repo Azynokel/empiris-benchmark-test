@@ -16,7 +16,7 @@ export interface BenchmarkAdapter<
   T extends string,
   O extends Record<string, string | number | boolean | undefined>
 > {
-  name: T;
-  setup: () => Promise<void>;
-  run: (options: Omit<O, "name">) => Promise<Metric[]>;
+  tool: T;
+  setup: (options: Omit<O, "tool">) => Promise<void>;
+  run: (options: Omit<O, "tool">) => Promise<Metric[]>;
 }

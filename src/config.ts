@@ -35,7 +35,7 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
 }
 
 const inchConfig = z.object({
-  name: z.literal("inch"),
+  tool: z.literal("inch"),
   influx_token: z.string(),
   version: z
     .union([z.literal(1), z.literal(2)])
@@ -48,13 +48,25 @@ const inchConfig = z.object({
 export type InchConfig = z.infer<typeof inchConfig>;
 
 const tsbsConfig = z.object({
-  name: z.literal("tsbs"),
+  tool: z.literal("tsbs"),
+  sut: z.union([z.literal("victoriametrics"), z.literal("timescaledb")]),
+  password: z.string().optional().default("tsbs"),
+  username: z.string().optional().default("tsbs"),
+  database: z.string().optional().default("tsbs"),
+  host: z.string().min(1).optional().default("http://localhost:8086"),
 });
 
 export type TSBSConfig = z.infer<typeof tsbsConfig>;
 
+const goConfig = z.object({
+  tool: z.literal("go"),
+  workdir: z.string().optional().default("."),
+});
+
+export type GoConfig = z.infer<typeof goConfig>;
+
 const configSchema = z.object({
-  benchmark: z.union([inchConfig, tsbsConfig]),
+  benchmark: z.union([inchConfig, tsbsConfig, goConfig]),
   visualization: z.object({
     api_key: z.string().optional(),
     api_base_url: z.string().optional().default("empiris.pages.dev"),

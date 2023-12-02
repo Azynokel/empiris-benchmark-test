@@ -38030,6 +38030,33 @@ exports.NEVER = parseUtil_1.INVALID;
 
 /***/ }),
 
+/***/ 3779:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.goAdapter = void 0;
+const exec_1 = __nccwpck_require__(7775);
+/**
+ * This is the adapter for the integrated Go benchmarking tool.
+ */
+exports.goAdapter = {
+    tool: "go",
+    setup: async () => {
+        // TODO: Setup gcp compute instance to run benchmarks on
+        // setupComputeInstance();
+    },
+    run: async ({ workdir }) => {
+        // TODO: Run go benchmark
+        await (0, exec_1.exec)(`go test -bench=${workdir} > ${workdir}/results.txt`);
+        return [];
+    },
+};
+
+
+/***/ }),
+
 /***/ 5800:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -38128,8 +38155,11 @@ function parseOutput(_out) {
     return metrics;
 }
 exports.parseOutput = parseOutput;
+/**
+ * This is the adapter for the inch benchmarking tool, works with InfluxDB 1.x and 2.x.
+ */
 exports.inchAdapter = {
-    name: "inch",
+    tool: "inch",
     setup: async () => {
         // Install inch locally
         await (0, exec_1.exec)("go install github.com/influxdata/inch/cmd/inch@latest");
@@ -38175,22 +38205,32 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.adapters = void 0;
 const inch_1 = __nccwpck_require__(5800);
 const tsbs_1 = __nccwpck_require__(753);
-exports.adapters = [inch_1.inchAdapter, tsbs_1.tsbsAdapter];
+const go_1 = __nccwpck_require__(3779);
+exports.adapters = [inch_1.inchAdapter, tsbs_1.tsbsAdapter, go_1.goAdapter];
 
 
 /***/ }),
 
 /***/ 753:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.tsbsAdapter = void 0;
+const exec_1 = __nccwpck_require__(7775);
+/**
+ * This is the adapter for the TSBS benchmarking tool. Works with many popular time series databases.
+ */
 exports.tsbsAdapter = {
-    name: "tsbs",
-    setup: async () => { },
-    run: async () => {
+    tool: "tsbs",
+    setup: async ({ sut }) => {
+        await (0, exec_1.exec)("go install github.com/timescale/tsbs/cmd/tsbs_generate_data@latest");
+        await (0, exec_1.exec)(`go install github.com/timescale/tsbs/cmd/tsbs_load_${sut}@latest`);
+    },
+    run: async ({ database, host, password, sut }) => {
+        await (0, exec_1.exec)("tsbs_generate_data --use-case=cpu-only --seed=123 --scale=1 --timestamp-start=2020-01-01T00:00:00Z --timestamp-end=2020-01-01T00:00:00Z --log-interval=1s --format=influx | gzip > data.gz");
+        await (0, exec_1.exec)(`tsbs_load_${sut} --workers=1 --batch-size=1000 --reporting-period=1s --urls=${host} --admin-db-name=${database} --pass=${password} --file=data.gz`);
         return [];
     },
 };
@@ -38265,7 +38305,7 @@ function injectEnvVarsRecursive(obj) {
 }
 exports.injectEnvVarsRecursive = injectEnvVarsRecursive;
 const inchConfig = z.object({
-    name: z.literal("inch"),
+    tool: z.literal("inch"),
     influx_token: z.string(),
     version: z
         .union([z.literal(1), z.literal(2)])
@@ -38275,10 +38315,19 @@ const inchConfig = z.object({
     host: z.string().min(1).optional().default("http://localhost:8086"),
 });
 const tsbsConfig = z.object({
-    name: z.literal("tsbs"),
+    tool: z.literal("tsbs"),
+    sut: z.union([z.literal("victoriametrics"), z.literal("timescaledb")]),
+    password: z.string().optional().default("tsbs"),
+    username: z.string().optional().default("tsbs"),
+    database: z.string().optional().default("tsbs"),
+    host: z.string().min(1).optional().default("http://localhost:8086"),
+});
+const goConfig = z.object({
+    tool: z.literal("go"),
+    workdir: z.string().optional().default("."),
 });
 const configSchema = z.object({
-    benchmark: z.union([inchConfig, tsbsConfig]),
+    benchmark: z.union([inchConfig, tsbsConfig, goConfig]),
     visualization: z.object({
         api_key: z.string().optional(),
         api_base_url: z.string().optional().default("empiris.pages.dev"),
@@ -38331,19 +38380,19 @@ const core = __importStar(__nccwpck_require__(9093));
 const config_1 = __nccwpck_require__(9598);
 const adapters_1 = __nccwpck_require__(2355);
 const write_results_1 = __nccwpck_require__(4413);
-function getAdapter(name) {
-    const adapter = adapters_1.adapters.find((adapter) => adapter.name === name);
+function getAdapter(tool) {
+    const adapter = adapters_1.adapters.find((adapter) => adapter.tool === tool);
     if (!adapter) {
-        throw new Error(`Adapter ${name} not found`);
+        throw new Error(`Adapter ${tool} not found`);
     }
     return adapter;
 }
 async function main() {
-    const { benchmark: { name, ...rest }, visualization: { api_base_url, api_key }, } = await (0, config_1.getConfig)();
+    const { benchmark: { tool, ...rest }, visualization: { api_base_url, api_key }, } = await (0, config_1.getConfig)();
     // Get the adapter
-    const adapter = getAdapter(name);
+    const adapter = getAdapter(tool);
     // Setup the Benchmark Client
-    await adapter.setup();
+    await adapter.setup(rest);
     // Run the Benchmark
     // We assume here that the SUT is already running and available, we don't do the setup here
     const metrics = await adapter.run(rest);

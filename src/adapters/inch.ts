@@ -79,8 +79,11 @@ export function parseOutput(_out: string): Metric[] {
 
 export type InchAdapter = BenchmarkAdapter<"inch", InchConfig>;
 
+/**
+ * This is the adapter for the inch benchmarking tool, works with InfluxDB 1.x and 2.x.
+ */
 export const inchAdapter: InchAdapter = {
-  name: "inch",
+  tool: "inch",
   setup: async () => {
     // Install inch locally
     await exec("go install github.com/influxdata/inch/cmd/inch@latest");

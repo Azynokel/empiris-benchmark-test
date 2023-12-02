@@ -1,5 +1,8 @@
 import { inchAdapter, InchAdapter } from "./inch";
 import { tsbsAdapter, TSBSAdapter } from "./tsbs";
+import { goAdapter, GoAdapter } from "./go";
+import { Config } from "../config";
+import { BenchmarkAdapter } from "../types";
 
 type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
   T
@@ -7,11 +10,18 @@ type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
   ? A
   : B;
 
-export type Adapter<T> = IfEquals<
+type NullAdapter = BenchmarkAdapter<"null", {}>;
+
+export type Adapter<T extends Config["benchmark"]["tool"]> = IfEquals<
   T,
-  InchAdapter["name"],
+  InchAdapter["tool"],
   InchAdapter,
-  TSBSAdapter
+  IfEquals<
+    T,
+    GoAdapter["tool"],
+    GoAdapter,
+    IfEquals<T, TSBSAdapter["tool"], TSBSAdapter, NullAdapter>
+  >
 >;
 
-export const adapters = [inchAdapter, tsbsAdapter];
+export const adapters = [inchAdapter, tsbsAdapter, goAdapter];

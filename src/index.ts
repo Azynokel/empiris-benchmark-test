@@ -3,11 +3,11 @@ import { Config, getConfig } from "./config";
 import { adapters, Adapter } from "./adapters";
 import { createExperimentRun, writeMetrics } from "./write-results";
 
-function getAdapter<T extends Config["benchmark"]["name"]>(name: T) {
-  const adapter = adapters.find((adapter) => adapter.name === name);
+function getAdapter<T extends Config["benchmark"]["tool"]>(tool: T) {
+  const adapter = adapters.find((adapter) => adapter.tool === tool);
 
   if (!adapter) {
-    throw new Error(`Adapter ${name} not found`);
+    throw new Error(`Adapter ${tool} not found`);
   }
 
   return adapter as Adapter<T>;
@@ -15,15 +15,15 @@ function getAdapter<T extends Config["benchmark"]["name"]>(name: T) {
 
 async function main() {
   const {
-    benchmark: { name, ...rest },
+    benchmark: { tool, ...rest },
     visualization: { api_base_url, api_key },
   } = await getConfig();
 
   // Get the adapter
-  const adapter = getAdapter(name);
+  const adapter = getAdapter(tool);
 
   // Setup the Benchmark Client
-  await adapter.setup();
+  await adapter.setup(rest);
 
   // Run the Benchmark
   // We assume here that the SUT is already running and available, we don't do the setup here

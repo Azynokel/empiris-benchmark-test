@@ -1,0 +1,6 @@
+benchmark:
+  tool: go
+  workdir: .
+
+visualization:
+  api_key: "{{ $env.api_key }}"
