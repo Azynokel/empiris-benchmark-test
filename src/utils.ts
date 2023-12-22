@@ -40,3 +40,18 @@ export async function waitOn({
 
   throw new Error(`Timeout after ${timeout}ms`);
 }
+
+export async function randomizedInterleavedExecution(
+  fns: (() => Promise<void>)[],
+  repitions = 3
+) {
+  for (let i = 0; i < repitions; i++) {
+    // Randomly shuffle the array
+    const shuffled = fns.sort(() => Math.random() - 0.5);
+
+    // Execute all functions
+    for (const fn of shuffled) {
+      await fn();
+    }
+  }
+}

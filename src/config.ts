@@ -65,8 +65,17 @@ const goConfig = z.object({
 
 export type GoConfig = z.infer<typeof goConfig>;
 
+const runSchema = z
+  .object({
+    gcp: z.string(),
+  })
+  .optional();
+
+export type Run = z.infer<typeof runSchema>;
+
 const configSchema = z.object({
   benchmark: z.union([inchConfig, tsbsConfig, goConfig]),
+  run: runSchema,
   visualization: z.object({
     api_key: z.string().optional(),
     api_base_url: z.string().optional().default("empiris.pages.dev"),
@@ -76,7 +85,7 @@ const configSchema = z.object({
 export type Config = z.infer<typeof configSchema>;
 
 export async function getConfig() {
-  const configPath = core.getInput("config_file");
+  const configPath = core.getInput("config_path");
   const configFile = await readFile(
     path.join(process.cwd(), configPath === "" ? "empiris.yml" : configPath),
     "utf8"

@@ -1,9 +1,15 @@
+# benchmark:
+#   tool: inch
+#   version: 2
+#   influx_token: "{{ $env.influx_token }}"
+#   host: "{{ $env.influx_host }}"
+#   database: test
+
 benchmark:
-  tool: inch
-  version: 2
-  influx_token: "{{ $env.influx_token }}"
-  host: "{{ $env.influx_host }}"
-  database: test
+  tool: go
+
+run:
+  gcp: "{{ $env.service_account }}"
 
 # benchmark:
 #   tool: tsbs

@@ -9,7 +9,7 @@ export type TSBSAdapter = BenchmarkAdapter<"tsbs", TSBSConfig>;
  */
 export const tsbsAdapter: TSBSAdapter = {
   tool: "tsbs",
-  setup: async ({ sut }) => {
+  setup: async ({ options: { sut } }) => {
     await exec(
       "go install github.com/timescale/tsbs/cmd/tsbs_generate_data@latest"
     );
@@ -17,7 +17,7 @@ export const tsbsAdapter: TSBSAdapter = {
       `go install github.com/timescale/tsbs/cmd/tsbs_load_${sut}@latest`
     );
   },
-  run: async ({ database, host, password, sut }) => {
+  run: async ({ options: { database, host, password, sut } }) => {
     await exec(
       "tsbs_generate_data --use-case=cpu-only --seed=123 --scale=1 --timestamp-start=2020-01-01T00:00:00Z --timestamp-end=2020-01-01T00:00:00Z --log-interval=1s --format=influx | gzip > data.gz"
     );

@@ -1,6 +1,6 @@
 benchmark:
   tool: go
-  workdir: .
+  workdir: examples/go
 
 visualization:
   api_key: "{{ $env.api_key }}"

@@ -2,6 +2,8 @@ import * as core from "@actions/core";
 import { Config, getConfig } from "./config";
 import { adapters, Adapter } from "./adapters";
 import { createExperimentRun, writeMetrics } from "./write-results";
+import { setupComputeInstance } from "./infrastructure/gcp";
+import { BenchmarkMetadata } from "./types";
 
 function getAdapter<T extends Config["benchmark"]["tool"]>(tool: T) {
   const adapter = adapters.find((adapter) => adapter.tool === tool);
@@ -17,17 +19,45 @@ async function main() {
   const {
     benchmark: { tool, ...rest },
     visualization: { api_base_url, api_key },
+    run,
   } = await getConfig();
+
+  let metadata: BenchmarkMetadata = {};
+
+  if (run?.gcp) {
+    try {
+      metadata = await setupComputeInstance({
+        project: "empiris",
+        serviceAccount: run?.gcp,
+      });
+    } catch (e) {
+      console.error("Failed to setup compute instance", e);
+    }
+  }
 
   // Get the adapter
   const adapter = getAdapter(tool);
 
   // Setup the Benchmark Client
-  await adapter.setup(rest);
+  await adapter.setup({ options: rest, metadata });
 
   // Run the Benchmark
   // We assume here that the SUT is already running and available, we don't do the setup here
-  const metrics = await adapter.run(rest);
+  const metrics = await adapter.run({ options: rest, metadata });
+
+  // Teardown the Benchmark Client
+  await adapter.teardown?.({ options: rest, metadata });
+
+  if (run?.gcp) {
+    try {
+      /* await destroyComputeInstance({
+        project: "empiris",
+        serviceAccount: run?.gcp,
+      }); */
+    } catch (e) {
+      console.error("Failed to destroy compute instance", e);
+    }
+  }
 
   if (metrics.length === 0) {
     core.warning("No metrics were collected");

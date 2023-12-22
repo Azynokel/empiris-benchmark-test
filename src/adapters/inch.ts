@@ -88,7 +88,7 @@ export const inchAdapter: InchAdapter = {
     // Install inch locally
     await exec("go install github.com/influxdata/inch/cmd/inch@latest");
   },
-  run: async ({ influx_token, version, database, host }) => {
+  run: async ({ options: { influx_token, version, database, host } }) => {
     // Wait for the database to be ready
     core.info(`Waiting for ${host} to be ready...`);
 
