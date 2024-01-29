@@ -3,6 +3,7 @@ import { tsbsAdapter, TSBSAdapter } from "./tsbs";
 import { goAdapter, GoAdapter } from "./go";
 import { Config } from "../config";
 import { BenchmarkAdapter } from "../types";
+import { z } from "zod";
 
 type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
   T
@@ -10,7 +11,7 @@ type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <
   ? A
   : B;
 
-type NullAdapter = BenchmarkAdapter<"null", {}>;
+type NullAdapter = BenchmarkAdapter<"null", z.AnyZodObject>;
 
 export type Adapter<T extends Config["benchmark"]["tool"]> = IfEquals<
   T,
@@ -24,4 +25,4 @@ export type Adapter<T extends Config["benchmark"]["tool"]> = IfEquals<
   >
 >;
 
-export const adapters = [inchAdapter, tsbsAdapter, goAdapter];
+export const adapters = [inchAdapter, tsbsAdapter, goAdapter] as const;

@@ -1,11 +1,15 @@
 import { exec } from "@actions/exec";
-import { GoConfig } from "../config";
-import { BenchmarkAdapter } from "../types";
+import { createAdapter } from "../types";
 import { randomizedInterleavedExecution } from "../utils";
+import { z } from "zod";
+import {
+  getBenchmarkstoRun,
+  buildCallGraph,
+  retrievePreviousCallGraph,
+} from "../optimization/call-graph";
+
 // import { getSSHKeyPath } from "../infrastructure/setup-ssh";
 // import { SSH_KEY_NAME, USER_NAME } from "../infrastructure/constants";
-
-export type GoAdapter = BenchmarkAdapter<"go", GoConfig>;
 
 async function getAllBenchmarks(workdir: string) {
   let out: string = "";
@@ -39,8 +43,13 @@ async function getAllBenchmarks(workdir: string) {
 /**
  * This is the adapter for the integrated Go benchmarking tool.
  */
-export const goAdapter: GoAdapter = {
+export const goAdapter = createAdapter({
   tool: "go",
+  config: z.object({
+    workdir: z.string().optional().default("."),
+    iterations: z.number().optional().default(1),
+    package: z.string().optional().default("."),
+  }),
   setup: async ({ metadata: { ip: _ip } }) => {
     // SSH into the instance and ignore known host check, execute a echo and exit immediately
     /* await exec(
@@ -62,21 +71,35 @@ export const goAdapter: GoAdapter = {
     ); */
   },
 
-  run: async ({ options: { workdir }, metadata: { ip: _ip } }) => {
-    // Get all benchmarks
-    const benchmarks = await getAllBenchmarks(workdir);
-
+  run: async ({
+    options: { workdir, iterations, package: packageName },
+    metadata: { ip: _ip },
+  }) => {
     const currentDir = process.cwd();
-
     // Change directory to workdir with code
     process.chdir(workdir);
 
+    // Get all benchmarks
+    const allBenchmarks = await getAllBenchmarks(packageName);
+
+    const currentCallGraph = await buildCallGraph(packageName);
+    const previousCallGraph = await retrievePreviousCallGraph();
+
+    const benchmarks = getBenchmarkstoRun(
+      previousCallGraph,
+      currentCallGraph,
+      allBenchmarks.map((benchmark) => [packageName, benchmark])
+    );
+
+    console.log("Benchmarks to run", benchmarks);
+
     await randomizedInterleavedExecution(
       benchmarks.map(
-        (benchmark) => async () => {
-          await exec(`go test -bench=${benchmark}`);
-        },
-        3
+        ([_, benchmark]) =>
+          async () => {
+            await exec(`go test -bench=${benchmark} ./${packageName}`);
+          },
+        iterations
       )
     );
 
@@ -85,4 +108,6 @@ export const goAdapter: GoAdapter = {
 
     return [];
   },
-};
+});
+
+export type GoAdapter = typeof goAdapter;

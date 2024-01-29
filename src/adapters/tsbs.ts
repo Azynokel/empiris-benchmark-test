@@ -1,14 +1,19 @@
 import { exec } from "@actions/exec";
-import { TSBSConfig } from "../config";
-import { BenchmarkAdapter } from "../types";
-
-export type TSBSAdapter = BenchmarkAdapter<"tsbs", TSBSConfig>;
+import { createAdapter } from "../types";
+import { z } from "zod";
 
 /**
  * This is the adapter for the TSBS benchmarking tool. Works with many popular time series databases.
  */
-export const tsbsAdapter: TSBSAdapter = {
+export const tsbsAdapter = createAdapter({
   tool: "tsbs",
+  config: z.object({
+    sut: z.union([z.literal("victoriametrics"), z.literal("timescaledb")]),
+    password: z.string().optional().default("tsbs"),
+    username: z.string().optional().default("tsbs"),
+    database: z.string().optional().default("tsbs"),
+    host: z.string().min(1).optional().default("http://localhost:8086"),
+  }),
   setup: async ({ options: { sut } }) => {
     await exec(
       "go install github.com/timescale/tsbs/cmd/tsbs_generate_data@latest"
@@ -28,4 +33,6 @@ export const tsbsAdapter: TSBSAdapter = {
 
     return [];
   },
-};
+});
+
+export type TSBSAdapter = typeof tsbsAdapter;

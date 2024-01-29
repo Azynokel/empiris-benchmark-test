@@ -1,6 +1,7 @@
 benchmark:
   tool: go
   workdir: examples/go
+  package: fib
 
 visualization:
   api_key: "{{ $env.api_key }}"

@@ -1,8 +1,8 @@
 import { exec } from "@actions/exec";
 import * as core from "@actions/core";
-import { BenchmarkAdapter, Metric } from "../types";
-import { InchConfig } from "../config";
+import { Metric, createAdapter } from "../types";
 import { waitOn } from "../utils";
+import { z } from "zod";
 
 /**
  * Parse the output of inch and return a list of metrics
@@ -77,18 +77,29 @@ export function parseOutput(_out: string): Metric[] {
   return metrics;
 }
 
-export type InchAdapter = BenchmarkAdapter<"inch", InchConfig>;
-
 /**
  * This is the adapter for the inch benchmarking tool, works with InfluxDB 1.x and 2.x.
  */
-export const inchAdapter: InchAdapter = {
+export const inchAdapter = createAdapter({
   tool: "inch",
+  config: z.object({
+    influx_token: z.string(),
+    version: z
+      .union([z.literal(1), z.literal(2)])
+      .optional()
+      .default(2),
+    database: z.string().optional().default("empiris"),
+    host: z.string().min(1).optional().default("http://localhost:8086"),
+    maxErrors: z.number().optional(),
+    time: z.number().optional(),
+  }),
   setup: async () => {
     // Install inch locally
     await exec("go install github.com/influxdata/inch/cmd/inch@latest");
   },
-  run: async ({ options: { influx_token, version, database, host } }) => {
+  run: async ({
+    options: { influx_token, version, database, host, maxErrors },
+  }) => {
     // Wait for the database to be ready
     core.info(`Waiting for ${host} to be ready...`);
 
@@ -111,6 +122,7 @@ export const inchAdapter: InchAdapter = {
         database,
         "-host",
         host,
+        typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`,
       ],
       {
         listeners: {
@@ -123,4 +135,6 @@ export const inchAdapter: InchAdapter = {
 
     return parseOutput(output);
   },
-};
+});
+
+export type InchAdapter = typeof inchAdapter;

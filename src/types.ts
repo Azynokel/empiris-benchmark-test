@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type DataframeMetric = {
   type: "dataframe";
   metric: "latency" | "throughput" | "error_rate";
@@ -16,21 +18,28 @@ export type BenchmarkMetadata = {
   ip?: string;
 };
 
-export interface BenchmarkAdapter<
-  T extends string,
-  O extends Record<string, string | number | boolean | undefined>
-> {
+export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
+  config: O;
   setup: (options: {
-    options: Omit<O, "tool">;
+    options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<void>;
   run: (options: {
-    options: Omit<O, "tool">;
+    options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<Metric[]>;
   teardown?: (options: {
-    options: Omit<O, "tool">;
+    options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<void>;
+}
+
+/**
+ * Helper function for type inference
+ */
+export function createAdapter<T extends string, O extends z.ZodTypeAny>(
+  adapter: BenchmarkAdapter<T, O>
+) {
+  return adapter;
 }

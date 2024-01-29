@@ -4,6 +4,7 @@ import { parse } from "yaml";
 import { readFile } from "fs/promises";
 import path from "path";
 import Handlebars from "handlebars";
+import { adapters } from "./adapters";
 
 /**
  * Simple function to inject process.env variables into a string
@@ -34,37 +35,6 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
   return result as T;
 }
 
-const inchConfig = z.object({
-  tool: z.literal("inch"),
-  influx_token: z.string(),
-  version: z
-    .union([z.literal(1), z.literal(2)])
-    .optional()
-    .default(2),
-  database: z.string().optional().default("empiris"),
-  host: z.string().min(1).optional().default("http://localhost:8086"),
-});
-
-export type InchConfig = z.infer<typeof inchConfig>;
-
-const tsbsConfig = z.object({
-  tool: z.literal("tsbs"),
-  sut: z.union([z.literal("victoriametrics"), z.literal("timescaledb")]),
-  password: z.string().optional().default("tsbs"),
-  username: z.string().optional().default("tsbs"),
-  database: z.string().optional().default("tsbs"),
-  host: z.string().min(1).optional().default("http://localhost:8086"),
-});
-
-export type TSBSConfig = z.infer<typeof tsbsConfig>;
-
-const goConfig = z.object({
-  tool: z.literal("go"),
-  workdir: z.string().optional().default("."),
-});
-
-export type GoConfig = z.infer<typeof goConfig>;
-
 const runSchema = z
   .object({
     gcp: z.string(),
@@ -74,7 +44,17 @@ const runSchema = z
 export type Run = z.infer<typeof runSchema>;
 
 const configSchema = z.object({
-  benchmark: z.union([inchConfig, tsbsConfig, goConfig]),
+  benchmark: z.union([
+    adapters[0].config.extend({
+      tool: z.literal(adapters[0].tool),
+    }),
+    adapters[1].config.extend({
+      tool: z.literal(adapters[1].tool),
+    }),
+    ...adapters
+      .slice(2)
+      .map((a) => a.config.extend({ tool: z.literal(a.tool) })),
+  ]),
   run: runSchema,
   visualization: z.object({
     api_key: z.string().optional(),
