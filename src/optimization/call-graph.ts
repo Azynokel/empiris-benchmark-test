@@ -61,7 +61,14 @@ export async function retrievePreviousCallGraph(token: string) {
     });
 
     // Get last known dot file
-    const { downloadPath } = await artifactClient.downloadArtifact(id);
+    const { downloadPath } = await artifactClient.downloadArtifact(id, {
+      findBy: {
+        repositoryName: repo?.[1] as string,
+        repositoryOwner: repo?.[0] as string,
+        token,
+        workflowRunId: lastRunId,
+      },
+    });
 
     if (!downloadPath) {
       // Empty graph
