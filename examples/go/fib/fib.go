@@ -1,7 +1,13 @@
 package fib
 
-func initFib() int {
-	return 3 + 3
+func initFib(n int) int {
+	result := 0
+
+	for i := 0; i < n; i++ {
+		result += i
+	}
+
+	return result
 }
 
 func Fib(n int) int {
@@ -12,10 +18,8 @@ func Fib(n int) int {
 }
 
 func Fib2(n int) int {
-	initFib()
-
 	if n < 2 {
 		return n
 	}
-	return Fib2(n-1) + Fib2(n-2)
+	return Fib(n-1) + Fib(n-2)
 }
