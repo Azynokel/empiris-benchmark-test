@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 import { exec } from "@actions/exec";
-import github from "@actions/github";
+import * as github from "@actions/github";
 import { DefaultArtifactClient } from "@actions/artifact";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { fromDot, Node, RootGraphModel, Graph } from "ts-graphviz";
@@ -13,9 +13,6 @@ const DOT_FILE = "output.dot";
 
 export async function retrievePreviousCallGraph(token: string) {
   core.info("Retrieving previous call graph");
-  if (process.env.ENV === "dev") {
-    return new Graph();
-  }
 
   // Get last run id
   const octokit = github.getOctokit(token);
@@ -29,8 +26,8 @@ export async function retrievePreviousCallGraph(token: string) {
   core.info(`Repo: ${repo?.[1]}`);
 
   const { data: runs } = await octokit.rest.actions.listWorkflowRuns({
-    owner: process.env.GITHUB_REPOSITORY?.split("/")[0] as string,
-    repo: process.env.GITHUB_REPOSITORY?.split("/")[1] as string,
+    owner: repo?.[0] as string,
+    repo: repo?.[1] as string,
     workflow_id: process.env.GITHUB_WORKFLOW_ID as string,
     status: "completed",
     branch: process.env.GITHUB_REF,
@@ -45,6 +42,10 @@ export async function retrievePreviousCallGraph(token: string) {
   }
 
   core.info(`Last run id: ${lastRunId}`);
+
+  if (process.env.ENV === "dev") {
+    return new Graph();
+  }
 
   const {
     artifact: { id },
