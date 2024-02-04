@@ -64,6 +64,7 @@ const configSchema = z.object({
     api_key: z.string().optional(),
     api_base_url: z.string().optional().default("empiris.pages.dev"),
   }),
+  github_token: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

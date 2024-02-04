@@ -18,6 +18,7 @@ export type Metric = DataframeMetric | TimeSeriesMetric;
 export type BenchmarkMetadata = {
   ip?: string;
   runConfig?: Run;
+  githubToken?: string;
 };
 
 export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {

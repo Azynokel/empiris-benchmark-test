@@ -48,6 +48,7 @@ jobs:
           service_account: ${{ secrets.GOOGLE_CREDENTIALS }}
           ssh_private_key: ${{ secrets.CLOUD_SSH_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
 
       # - name: Destroy influx
       #   # Make sure infrastructure is destroyed even in case of previous failures

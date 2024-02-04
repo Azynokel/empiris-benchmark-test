@@ -28,6 +28,7 @@ async function main() {
   const {
     benchmark: { tool, ...rest },
     run,
+    github_token,
   } = await getConfig();
 
   let metadata: BenchmarkMetadata = {};
@@ -51,7 +52,7 @@ async function main() {
     }
   }
 
-  metadata = { ...metadata, runConfig: run };
+  metadata = { ...metadata, runConfig: run, githubToken: github_token };
 
   // Get the adapter
   const adapter = getAdapter(tool);

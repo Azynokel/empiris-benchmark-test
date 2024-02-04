@@ -1,5 +1,6 @@
 import * as core from "@actions/core";
 import { exec } from "@actions/exec";
+import github from "@actions/github";
 import { DefaultArtifactClient } from "@actions/artifact";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { fromDot, Node, RootGraphModel, Graph } from "ts-graphviz";
@@ -10,15 +11,51 @@ const artifactClient = new DefaultArtifactClient();
 const CALL_GRAPH_ARTIFACT_NAME = "call-graph";
 const DOT_FILE = "output.dot";
 
-export async function retrievePreviousCallGraph() {
+export async function retrievePreviousCallGraph(token: string) {
   core.info("Retrieving previous call graph");
   if (process.env.ENV === "dev") {
     return new Graph();
   }
 
+  // Get last run id
+  const octokit = github.getOctokit(token);
+
+  core.info(
+    `Getting the last run for the workflow ${process.env.GITHUB_WORKFLOW_ID} and branch ${process.env.GITHUB_REF}`
+  );
+  const repo = process.env.GITHUB_REPOSITORY?.split("/");
+
+  core.info(`Owner: ${repo?.[0]}`);
+  core.info(`Repo: ${repo?.[1]}`);
+
+  const { data: runs } = await octokit.rest.actions.listWorkflowRuns({
+    owner: process.env.GITHUB_REPOSITORY?.split("/")[0] as string,
+    repo: process.env.GITHUB_REPOSITORY?.split("/")[1] as string,
+    workflow_id: process.env.GITHUB_WORKFLOW_ID as string,
+    status: "completed",
+    branch: process.env.GITHUB_REF,
+  });
+
+  const lastRunId = runs.workflow_runs.find(
+    (run) => run.conclusion === "success"
+  )?.id;
+
+  if (!lastRunId) {
+    return new Graph();
+  }
+
+  core.info(`Last run id: ${lastRunId}`);
+
   const {
     artifact: { id },
-  } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME);
+  } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME, {
+    findBy: {
+      repositoryName: process.env.GITHUB_REPOSITORY as string,
+      repositoryOwner: process.env.GITHUB_ACTOR as string,
+      token,
+      workflowRunId: lastRunId,
+    },
+  });
 
   // Get last known dot file
   const { downloadPath } = await artifactClient.downloadArtifact(id);

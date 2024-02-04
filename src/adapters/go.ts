@@ -1,4 +1,5 @@
 import { exec } from "@actions/exec";
+import core from "@actions/core";
 import { createAdapter } from "../types";
 import { randomizedInterleavedExecution } from "../utils";
 import { z } from "zod";
@@ -54,8 +55,15 @@ export const goAdapter = createAdapter({
 
   run: async ({
     options: { workdir, iterations, package: packageName },
-    metadata: { ip: _ip },
+    metadata: { ip: _ip, githubToken },
   }) => {
+    if (!githubToken) {
+      core.error(
+        "No github token provided, this adapter only works with a github token"
+      );
+      return [];
+    }
+
     const currentDir = process.cwd();
     // Change directory to workdir with code
     process.chdir(workdir);
@@ -63,7 +71,7 @@ export const goAdapter = createAdapter({
     // Get all benchmarks
     const allBenchmarks = await getAllBenchmarks(packageName);
 
-    const previousCallGraph = await retrievePreviousCallGraph();
+    const previousCallGraph = await retrievePreviousCallGraph(githubToken);
     // Note: Also uploads a new call graph
     const currentCallGraph = await buildCallGraph(packageName);
     const lastChanges = await getLastChanges(workdir);

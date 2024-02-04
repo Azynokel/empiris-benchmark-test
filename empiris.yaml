@@ -22,3 +22,5 @@ run:
 
 visualization:
   api_key: "{{ $env.api_key }}"
+
+github_token: "{{ $env.github_token }}"
