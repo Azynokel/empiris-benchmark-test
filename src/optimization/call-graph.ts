@@ -137,10 +137,10 @@ export function getBenchmarkstoRun({
     if (
       previousDependencies.some(
         (dependency, index) =>
-          previousCallGraph.getNode(dependency.id)?.attributes.get("label") !==
+          previousCallGraph.getNode(dependency.id)?.attributes?.get("label") !==
           currentCallGraph
             .getNode(currentDependencies[index]?.id)
-            ?.attributes.get("label")
+            ?.attributes?.get("label")
       )
     ) {
       // Dependencies have changed, run the benchmark
