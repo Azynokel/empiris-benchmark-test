@@ -58,8 +58,6 @@ export const goAdapter = createAdapter({
     options: { workdir, iterations, package: packageName },
     metadata: { ip: _ip, githubToken },
   }) => {
-    console.log(githubToken);
-
     const currentDir = process.cwd();
     // Change directory to workdir with code
     process.chdir(workdir);
@@ -95,11 +93,22 @@ export const goAdapter = createAdapter({
 
     console.log("Benchmarks to run", benchmarks);
 
+    let outputs = [];
+
     await randomizedInterleavedExecution(
       benchmarks.map(
         ([_, benchmark]) =>
           async () => {
-            await exec(`go test -bench=${benchmark} ./${packageName}`);
+            let out = "";
+            await exec(`go test -bench=${benchmark} ./${packageName}`, [], {
+              listeners: {
+                stdout: (data: Buffer) => {
+                  out += data.toString();
+                },
+              },
+            });
+
+            outputs.push(out);
           },
         iterations
       )
