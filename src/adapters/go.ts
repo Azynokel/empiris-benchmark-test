@@ -6,10 +6,8 @@ import {
   getBenchmarkstoRun,
   buildCallGraph,
   retrievePreviousCallGraph,
+  getLastChanges,
 } from "../optimization/call-graph";
-
-// import { getSSHKeyPath } from "../infrastructure/setup-ssh";
-// import { SSH_KEY_NAME, USER_NAME } from "../infrastructure/constants";
 
 async function getAllBenchmarks(workdir: string) {
   let out: string = "";
@@ -67,12 +65,19 @@ export const goAdapter = createAdapter({
 
     const currentCallGraph = await buildCallGraph(packageName);
     const previousCallGraph = await retrievePreviousCallGraph();
+    const lastChanges = await getLastChanges(workdir);
 
-    const benchmarks = getBenchmarkstoRun(
+    // Filter out all non .go files
+    const goFiles = Object.fromEntries(
+      Object.entries(lastChanges).filter(([file, _]) => file.endsWith(".go"))
+    );
+
+    const benchmarks = getBenchmarkstoRun({
       previousCallGraph,
       currentCallGraph,
-      allBenchmarks.map((benchmark) => [packageName, benchmark])
-    );
+      changedFiles: goFiles,
+      allBenchmarks: allBenchmarks.map((benchmark) => [packageName, benchmark]),
+    });
 
     console.log("Benchmarks to run", benchmarks);
 
