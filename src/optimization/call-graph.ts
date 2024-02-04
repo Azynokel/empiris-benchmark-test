@@ -73,7 +73,8 @@ export async function retrievePreviousCallGraph(token: string) {
     return fromDot(dotModel);
   } catch (error) {
     core.warning(
-      "Could not retrieve previous call graph, resume with empty graph"
+      "Could not retrieve previous call graph, resume with empty graph: " +
+        error
     );
     return new Graph();
   }
