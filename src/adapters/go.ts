@@ -1,5 +1,5 @@
 import { exec } from "@actions/exec";
-import core from "@actions/core";
+import * as core from "@actions/core";
 import { createAdapter } from "../types";
 import { randomizedInterleavedExecution } from "../utils";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import {
   retrievePreviousCallGraph,
   getLastChanges,
 } from "../optimization/call-graph";
+import { Graph } from "ts-graphviz";
 
 async function getAllBenchmarks(workdir: string) {
   let out: string = "";
@@ -57,12 +58,7 @@ export const goAdapter = createAdapter({
     options: { workdir, iterations, package: packageName },
     metadata: { ip: _ip, githubToken },
   }) => {
-    if (!githubToken) {
-      core.error(
-        "No github token provided, this adapter only works with a github token"
-      );
-      return [];
-    }
+    console.log(githubToken);
 
     const currentDir = process.cwd();
     // Change directory to workdir with code
@@ -71,7 +67,16 @@ export const goAdapter = createAdapter({
     // Get all benchmarks
     const allBenchmarks = await getAllBenchmarks(packageName);
 
-    const previousCallGraph = await retrievePreviousCallGraph(githubToken);
+    if (!githubToken) {
+      core.warning(
+        "No github token provided, optimizing the benchmarks is only possible with a github token"
+      );
+    }
+
+    const previousCallGraph =
+      typeof githubToken === "undefined"
+        ? new Graph()
+        : await retrievePreviousCallGraph(githubToken);
     // Note: Also uploads a new call graph
     const currentCallGraph = await buildCallGraph(packageName);
     const lastChanges = await getLastChanges(workdir);
