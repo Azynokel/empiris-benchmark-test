@@ -3,10 +3,12 @@ import { exec } from "@actions/exec";
 import { DefaultArtifactClient } from "@actions/artifact";
 import { readFile, unlink, writeFile } from "fs/promises";
 import { fromDot, Node, RootGraphModel, Graph } from "ts-graphviz";
+import path from "path";
 
 const artifactClient = new DefaultArtifactClient();
 
 const CALL_GRAPH_ARTIFACT_NAME = "call-graph";
+const DOT_FILE = "output.dot";
 
 export async function retrievePreviousCallGraph() {
   core.info("Retrieving previous call graph");
@@ -27,14 +29,13 @@ export async function retrievePreviousCallGraph() {
   }
 
   core.info("Read " + downloadPath);
-  const dotModel = await readFile(downloadPath, "utf-8");
+  const dotModel = await readFile(path.join(downloadPath, DOT_FILE), "utf-8");
 
   return fromDot(dotModel);
 }
 
 export async function buildCallGraph(workdir: string) {
   const profilePath = "profile.out";
-  const dotPath = "output.dot";
 
   // TODO: Increase cpu profiling rate to get more accurate results
   await exec(
@@ -48,25 +49,25 @@ export async function buildCallGraph(workdir: string) {
     listeners: {
       async stdout(data) {
         // Append to the output file
-        await writeFile(dotPath, data, { flag: "a" });
+        await writeFile(DOT_FILE, data, { flag: "a" });
       },
     },
   });
 
-  const dotModel = await readFile(dotPath, "utf-8");
+  const dotModel = await readFile(DOT_FILE, "utf-8");
 
   const graph = fromDot(dotModel.replaceAll("\n", " "));
 
   if (process.env.ENV !== "dev") {
     await artifactClient.uploadArtifact(
       CALL_GRAPH_ARTIFACT_NAME,
-      [dotPath],
+      [DOT_FILE],
       "."
     );
   }
 
   // Clean up
-  await unlink(dotPath);
+  await unlink(DOT_FILE);
   await unlink(profilePath);
 
   return graph;
