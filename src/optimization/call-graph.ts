@@ -1,3 +1,4 @@
+import * as core from "@actions/core";
 import { exec } from "@actions/exec";
 import { DefaultArtifactClient } from "@actions/artifact";
 import { readFile, unlink, writeFile } from "fs/promises";
@@ -8,6 +9,7 @@ const artifactClient = new DefaultArtifactClient();
 const CALL_GRAPH_ARTIFACT_NAME = "call-graph";
 
 export async function retrievePreviousCallGraph() {
+  core.info("Retrieving previous call graph");
   if (process.env.ENV === "dev") {
     return new Graph();
   }
@@ -24,7 +26,7 @@ export async function retrievePreviousCallGraph() {
     return new Graph();
   }
 
-  console.log("Read", downloadPath);
+  core.info("Read " + downloadPath);
   const dotModel = await readFile(downloadPath, "utf-8");
 
   return fromDot(dotModel);

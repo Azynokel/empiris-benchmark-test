@@ -10,7 +10,7 @@ export const tsbsAdapter = createAdapter({
   config: z.object({
     database: z.object({
       type: z.union([
-        z.literal("influx"),
+        z.literal("influxdb"),
         z.literal("victoriametrics"),
         z.literal("timescaledb"),
       ]),
