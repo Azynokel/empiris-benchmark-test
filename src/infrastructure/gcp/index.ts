@@ -1,14 +1,17 @@
 import * as gcp from "@google-cloud/compute";
+import * as core from "@actions/core";
 import { GoogleAuth } from "google-auth-library";
 import { BenchmarkMetadata } from "../../types";
 
-import { addIpToKnownHosts, createSSHKey } from "../setup-ssh";
-import { SSH_KEY_NAME, USER_NAME } from "../constants";
+import { USER_NAME } from "../constants";
 
 export async function setupComputeInstance({
   project,
   serviceAccount,
+  sshKey,
   startupScript = `
+  #!/bin/bash
+
   # Add Docker's official GPG key:
   sudo apt-get update -y
   sudo apt-get install ca-certificates curl gnupg -y
@@ -24,8 +27,17 @@ export async function setupComputeInstance({
   sudo apt-get update -y
   
   sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-  
-  sudo docker run -d -p 8086:8086 -e DOCKER_INFLUXDB_INIT_MODE=setup -e DOCKER_INFLUXDB_INIT_USERNAME=admin -e DOCKER_INFLUXDB_INIT_PASSWORD=12345678 -e DOCKER_INFLUXDB_INIT_ORG=test -e DOCKER_INFLUXDB_INIT_BUCKET=test -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw== -v myInfluxVolume:/var/lib/influxdb2 influxdb:latest 
+
+  # Add go to the path
+  echo 'export GOPATH=$HOME/go' >> ~/.profile
+  echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> ~/.profile
+  source ~/.profile
+
+  echo 'export GOPATH=$HOME/go' >> ~/.bashrc
+  echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> ~/.bashrc
+  source ~/.bashrc 
+
+  sudo docker run -d --rm --name web-test -p 80:8000 crccheck/hello-world
   `,
   // Default zone europe-west1-b
   zone = "europe-west1-b",
@@ -34,6 +46,7 @@ export async function setupComputeInstance({
   serviceAccount: string;
   startupScript?: string;
   zone?: string;
+  sshKey: string;
 }): Promise<BenchmarkMetadata> {
   // Auth with service account
   const authClient = new GoogleAuth({
@@ -104,7 +117,7 @@ export async function setupComputeInstance({
       allowed: [
         {
           IPProtocol: "tcp",
-          ports: ["22", "80", "443", "8086"],
+          ports: ["22", "80", "443"],
         },
       ],
       sourceRanges: ["0.0.0.0/0"],
@@ -155,13 +168,6 @@ export async function setupComputeInstance({
     throw new Error("Ip address not found");
   }
 
-  // Create SSH key
-  console.log("Creating SSH key");
-
-  // Get SSH key
-  const sshKey = await createSSHKey(SSH_KEY_NAME, USER_NAME);
-
-  console.log("SSH key created", sshKey);
   console.log("Creating compute instance");
 
   const [createInstanceOperation] = await compute.insert({
@@ -221,7 +227,7 @@ export async function setupComputeInstance({
   });
 
   console.log("Adding ip to known hosts");
-  await addIpToKnownHosts(address.address);
+  // await addIpToKnownHosts(address.address);
 
   console.log("Compute instance ready at " + address.address);
 
@@ -233,11 +239,12 @@ export async function setupComputeInstance({
 export async function destroyComputeInstance({
   project,
   serviceAccount,
+  zone = "europe-west1-b",
 }: {
   project: string;
   serviceAccount: string;
-  startupScript?: string;
   zone?: string;
+  isCleanUp?: boolean;
 }) {
   // Auth with service account
   const authClient = new GoogleAuth({
@@ -266,41 +273,70 @@ export async function destroyComputeInstance({
     auth: authClient,
     projectId: project,
   });
-
-  await firewall.delete({
-    project,
-    firewall: "empiris",
+  const zonesOperations = new gcp.ZoneOperationsClient({
+    auth: authClient,
+    projectId: project,
   });
 
-  await ip.delete({
-    project,
-    region: "europe-west1",
-    address: "empiris",
-  });
+  try {
+    core.info("Destroying firewall..");
 
-  const [deleteComputeOperation] = await compute.delete({
-    project,
-    zone: "europe-west1-b",
-    instance: "empiris",
-  });
-
-  if (!deleteComputeOperation) {
-    throw new Error("Compute instance deletion failed");
+    await firewall.delete({
+      project,
+      firewall: "empiris",
+    });
+  } catch (e) {
+    console.error("Failed to destroy firewall", e);
   }
 
-  await globalOperations.wait({
-    operation: deleteComputeOperation.latestResponse?.name,
-    project,
-  });
+  try {
+    core.info("Destroying ip..");
 
-  const [networkResult] = await network.delete({
-    project,
-    network: "empiris",
-  });
+    await ip.delete({
+      project,
+      region: "europe-west1",
+      address: "empiris",
+    });
+  } catch (e) {
+    console.error("Failed to destroy ip", e);
+  }
 
-  // Wait for network to be deleted
-  await globalOperations.wait({
-    operation: networkResult.latestResponse?.name,
-    project,
-  });
+  try {
+    core.info("Destroying compute instance..");
+
+    const [deleteComputeOperation] = await compute.delete({
+      project,
+      zone: "europe-west1-b",
+      instance: "empiris",
+    });
+
+    if (!deleteComputeOperation) {
+      throw new Error("Compute instance deletion failed");
+    }
+
+    await zonesOperations.wait({
+      operation: deleteComputeOperation.latestResponse?.name,
+      project,
+      zone,
+    });
+  } catch (e) {
+    console.error("Failed to destroy compute instance", e);
+  }
+
+  try {
+    core.info("Destroying network..");
+
+    const [networkResult] = await network.delete({
+      project,
+      network: "empiris",
+    });
+
+    // Wait for network to be deleted
+    await globalOperations.wait({
+      operation: networkResult.latestResponse?.name,
+      project,
+    });
+  } catch (e) {
+    console.error("Failed to destroy network", e);
+  }
 }

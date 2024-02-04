@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Run } from "./config";
 
 export type DataframeMetric = {
   type: "dataframe";
@@ -16,15 +17,17 @@ export type Metric = DataframeMetric | TimeSeriesMetric;
 
 export type BenchmarkMetadata = {
   ip?: string;
+  runConfig?: Run;
 };
 
 export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
   config: O;
+  dependencies?: "go"[];
   setup: (options: {
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
-  }) => Promise<void>;
+  }) => Promise<string[]> | string[];
   run: (options: {
     options: z.infer<O>;
     metadata: BenchmarkMetadata;

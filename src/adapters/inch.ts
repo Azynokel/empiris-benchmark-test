@@ -3,6 +3,9 @@ import * as core from "@actions/core";
 import { Metric, createAdapter } from "../types";
 import { waitOn } from "../utils";
 import { z } from "zod";
+import { NodeSSH } from "node-ssh";
+
+const ssh = new NodeSSH();
 
 /**
  * Parse the output of inch and return a list of metrics
@@ -91,47 +94,71 @@ export const inchAdapter = createAdapter({
     database: z.string().optional().default("empiris"),
     host: z.string().min(1).optional().default("http://localhost:8086"),
     maxErrors: z.number().optional(),
-    time: z.number().optional(),
+    time: z.string().optional().default("1m"),
   }),
-  setup: async () => {
-    // Install inch locally
-    await exec("go install github.com/influxdata/inch/cmd/inch@latest");
+  dependencies: ["go"],
+  setup() {
+    return ["go install github.com/influxdata/inch/cmd/inch@latest"];
   },
   run: async ({
-    options: { influx_token, version, database, host, maxErrors },
+    options: { influx_token, version, database, host, maxErrors, time },
+    metadata: { ip, runConfig },
   }) => {
-    // Wait for the database to be ready
     core.info(`Waiting for ${host} to be ready...`);
 
     await waitOn({
       ressources: [`${host}/health`],
+      // Timeout after 5 minutes
+      timeout: 1000 * 60 * 5,
     });
 
     core.info(`Running inch...`);
-
-    // Run inch
     let output = "";
-    await exec(
-      "inch",
-      [
-        "-token",
-        influx_token,
-        version === 2 ? "-v2" : "",
-        "-v",
-        "-db",
-        database,
-        "-host",
-        host,
-        typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`,
-      ],
-      {
-        listeners: {
-          stdout: (data: Buffer) => {
-            output += data.toString();
+
+    if (ip && runConfig) {
+      await ssh.connect({
+        host: ip,
+        username: "empiris",
+        privateKey: runConfig.ssh.private_key,
+      });
+
+      // Run inch on the remote machine
+      const result = await ssh.execCommand(
+        `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && inch -token ${influx_token} ${
+          version === 2 ? "-v2" : ""
+        } -v -db ${database} -host ${host} ${
+          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`
+        } ${typeof time === "undefined" ? "" : `-time ${time}`}`
+      );
+
+      core.info(result.stdout);
+
+      output = result.stdout;
+    } else {
+      // Run inch locally
+      await exec(
+        "inch",
+        [
+          "-token",
+          influx_token,
+          version === 2 ? "-v2" : "",
+          "-v",
+          "-db",
+          database,
+          "-host",
+          host,
+          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`,
+          typeof time === "undefined" ? "" : `-time ${time}`,
+        ],
+        {
+          listeners: {
+            stdout: (data: Buffer) => {
+              output += data.toString();
+            },
           },
-        },
-      }
-    );
+        }
+      );
+    }
 
     return parseOutput(output);
   },

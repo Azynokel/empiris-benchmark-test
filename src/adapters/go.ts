@@ -50,25 +50,8 @@ export const goAdapter = createAdapter({
     iterations: z.number().optional().default(1),
     package: z.string().optional().default("."),
   }),
-  setup: async ({ metadata: { ip: _ip } }) => {
-    // SSH into the instance and ignore known host check, execute a echo and exit immediately
-    /* await exec(
-      `ssh -o StrictHostKeyChecking=no -i ${
-        getSSHKeyPath(SSH_KEY_NAME).privateKeyPath
-      } ${USER_NAME}@${ip} -f 'ls -a && exit'`,
-      [],
-      {
-        ignoreReturnCode: true,
-        listeners: {
-          stderr: (data: Buffer) => {
-            console.log("ERROR", data.toString());
-          },
-          stdout: (data: Buffer) => {
-            console.log("SUCCESS", data.toString());
-          },
-        },
-      }
-    ); */
+  setup: async () => {
+    return [];
   },
 
   run: async ({

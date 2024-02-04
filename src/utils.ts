@@ -55,3 +55,30 @@ export async function randomizedInterleavedExecution(
     }
   }
 }
+
+/**
+ * Utilty to turn a human readable time into milliseconds
+ */
+export function toMs(time: string) {
+  const parts = time.split(" ");
+
+  return parts.reduce((acc, part) => {
+    if (part.endsWith("ms")) {
+      return acc + parseInt(part);
+    }
+
+    if (part.endsWith("s")) {
+      return acc + parseInt(part) * 1000;
+    }
+
+    if (part.endsWith("m")) {
+      return acc + parseInt(part) * 1000 * 60;
+    }
+
+    if (part.endsWith("h")) {
+      return acc + parseInt(part) * 1000 * 60 * 60;
+    }
+
+    return acc;
+  }, 0);
+}

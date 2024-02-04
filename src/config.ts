@@ -38,6 +38,10 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
 const runSchema = z
   .object({
     gcp: z.string(),
+    ssh: z.object({
+      public_key: z.string(),
+      private_key: z.string(),
+    }),
   })
   .optional();
 

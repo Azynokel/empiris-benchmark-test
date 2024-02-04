@@ -1,0 +1,24 @@
+benchmark:
+  tool: inch
+  version: 2
+  influx_token: "{{ $env.influx_token }}"
+  host: "{{ $env.influx_host }}"
+  database: test
+  time: 2m
+
+run:
+  gcp: "{{ $env.service_account }}"
+  ssh:
+    private_key: "{{ $env.ssh_private_key }}"
+    public_key: "{{ $env.ssh_public_key }}"
+
+# benchmark:
+#   tool: tsbs
+#   sut: timescaledb
+#   username: admin
+#   password: "{{ $env.influx_token }}"
+#   host: "{{ $env.influx_host }}"
+#   database: test
+
+visualization:
+  api_key: "{{ $env.api_key }}"
