@@ -30,12 +30,16 @@ export async function retrievePreviousCallGraph(token: string) {
     repo: repo?.[1] as string,
     workflow_id: process.env.GITHUB_WORKFLOW_ID as string,
     status: "completed",
-    branch: process.env.GITHUB_REF,
   });
 
-  const lastRunId = runs.workflow_runs.find(
-    (run) => run.conclusion === "success"
-  )?.id;
+  if (runs.total_count === 0) {
+    return new Graph();
+  }
+
+  const lastRunId = runs.workflow_runs.sort(
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )[0].id;
 
   if (!lastRunId) {
     return new Graph();
@@ -51,8 +55,8 @@ export async function retrievePreviousCallGraph(token: string) {
     artifact: { id },
   } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME, {
     findBy: {
-      repositoryName: process.env.GITHUB_REPOSITORY as string,
-      repositoryOwner: process.env.GITHUB_ACTOR as string,
+      repositoryName: repo?.[1] as string,
+      repositoryOwner: repo?.[0] as string,
       token,
       workflowRunId: lastRunId,
     },
