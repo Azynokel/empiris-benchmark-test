@@ -118,7 +118,6 @@ export function getBenchmarkstoRun({
     );
 
     if (!currentNode) {
-      // Benchmark was removed, don't run it
       continue;
     }
 
@@ -132,9 +131,14 @@ export function getBenchmarkstoRun({
       currentNode.id
     );
 
+    core.info("Previous dependencies" + JSON.stringify(previousDependencies));
+    core.info("Current dependencies" + JSON.stringify(currentDependencies));
+
     if (
       previousDependencies.some(
-        (dependency, index) => dependency !== currentDependencies[index]
+        (dependency, index) =>
+          dependency.attributes.get("label") !==
+          currentDependencies[index]?.attributes.get("label")
       )
     ) {
       // Dependencies have changed, run the benchmark
