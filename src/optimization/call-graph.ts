@@ -17,15 +17,14 @@ export async function retrievePreviousCallGraph() {
   } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME);
 
   // Get last known dot file
-  const { downloadPath } = await artifactClient.downloadArtifact(id, {
-    path: "call-graph.dot",
-  });
+  const { downloadPath } = await artifactClient.downloadArtifact(id);
 
   if (!downloadPath) {
     // Empty graph
     return new Graph();
   }
 
+  console.log("Read", downloadPath);
   const dotModel = await readFile(downloadPath, "utf-8");
 
   return fromDot(dotModel);
