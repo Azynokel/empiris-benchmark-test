@@ -63,8 +63,9 @@ export const goAdapter = createAdapter({
     // Get all benchmarks
     const allBenchmarks = await getAllBenchmarks(packageName);
 
-    const currentCallGraph = await buildCallGraph(packageName);
     const previousCallGraph = await retrievePreviousCallGraph();
+    // Note: Also uploads a new call graph
+    const currentCallGraph = await buildCallGraph(packageName);
     const lastChanges = await getLastChanges(workdir);
 
     // Filter out all non .go files

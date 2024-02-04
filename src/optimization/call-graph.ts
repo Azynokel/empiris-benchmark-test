@@ -132,9 +132,6 @@ export function getBenchmarkstoRun({
       currentNode.id
     );
 
-    core.info("Previous dependencies" + JSON.stringify(previousDependencies));
-    core.info("Current dependencies" + JSON.stringify(currentDependencies));
-
     if (
       previousDependencies.some(
         (dependency, index) =>
@@ -160,6 +157,11 @@ export function getBenchmarkstoRun({
       }
 
       const [packageName, methodName] = label.split("\n");
+
+      core.info(
+        `Checking if ${packageName} and ${methodName} are present in the changed files`
+      );
+      core.info(`Changed files: ${JSON.stringify(changedFiles)}`);
 
       // Check if in some changed file the packageName and methodName is present
       if (
