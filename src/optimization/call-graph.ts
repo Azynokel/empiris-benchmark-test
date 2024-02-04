@@ -28,7 +28,6 @@ export async function retrievePreviousCallGraph() {
     return new Graph();
   }
 
-  core.info("Read " + downloadPath);
   const dotModel = await readFile(path.join(downloadPath, DOT_FILE), "utf-8");
 
   return fromDot(dotModel);
