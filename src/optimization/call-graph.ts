@@ -77,9 +77,9 @@ function getDependencies(callGraph: RootGraphModel, nodeId: string) {
 
   for (const edge of callGraph.edges) {
     const [fromNode, toNode] = edge.targets as [Node, Node];
-    if (toNode.id === nodeId) {
-      dependencies.push(fromNode);
-      dependencies.push(...getDependencies(callGraph, fromNode.id));
+    if (fromNode.id === nodeId) {
+      dependencies.push(toNode);
+      dependencies.push(...getDependencies(callGraph, toNode.id));
     }
   }
 
