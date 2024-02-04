@@ -33,6 +33,7 @@ export async function retrievePreviousCallGraph(token: string) {
   });
 
   if (runs.total_count === 0) {
+    core.info("No previous runs found");
     return new Graph();
   }
 
@@ -41,38 +42,41 @@ export async function retrievePreviousCallGraph(token: string) {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   )[0].id;
 
-  if (!lastRunId) {
-    return new Graph();
-  }
-
   core.info(`Last run id: ${lastRunId}`);
 
   if (process.env.ENV === "dev") {
     return new Graph();
   }
 
-  const {
-    artifact: { id },
-  } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME, {
-    findBy: {
-      repositoryName: repo?.[1] as string,
-      repositoryOwner: repo?.[0] as string,
-      token,
-      workflowRunId: lastRunId,
-    },
-  });
+  try {
+    const {
+      artifact: { id },
+    } = await artifactClient.getArtifact(CALL_GRAPH_ARTIFACT_NAME, {
+      findBy: {
+        repositoryName: repo?.[1] as string,
+        repositoryOwner: repo?.[0] as string,
+        token,
+        workflowRunId: lastRunId,
+      },
+    });
 
-  // Get last known dot file
-  const { downloadPath } = await artifactClient.downloadArtifact(id);
+    // Get last known dot file
+    const { downloadPath } = await artifactClient.downloadArtifact(id);
 
-  if (!downloadPath) {
-    // Empty graph
+    if (!downloadPath) {
+      // Empty graph
+      return new Graph();
+    }
+
+    const dotModel = await readFile(path.join(downloadPath, DOT_FILE), "utf-8");
+
+    return fromDot(dotModel);
+  } catch (error) {
+    core.warning(
+      "Could not retrieve previous call graph, resume with empty graph"
+    );
     return new Graph();
   }
-
-  const dotModel = await readFile(path.join(downloadPath, DOT_FILE), "utf-8");
-
-  return fromDot(dotModel);
 }
 
 export async function buildCallGraph(workdir: string) {
