@@ -18,7 +18,7 @@ export async function retrievePreviousCallGraph(token: string) {
   const octokit = github.getOctokit(token);
 
   core.info(
-    `Getting the last run for the workflow ${process.env.GITHUB_WORKFLOW_ID} and branch ${process.env.GITHUB_REF}`
+    `Getting the last run for the workflow ${process.env.GITHUB_WORKFLOW_ID}`
   );
   const repo = process.env.GITHUB_REPOSITORY?.split("/");
 

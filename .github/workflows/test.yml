@@ -40,6 +40,7 @@ jobs:
         with:
           config_path: empiris.micro.yaml
         env:
+          GITHUB_WORKFLOW_ID: test.yml
           api_key: ${{ secrets.EMPIRIS_API_KEY }}
           influx_token: "PdomKtCYz_r7ym9yAcHMzxCA57lwyTkAWiwUbVk4sXePLU5eAckk9J-K6pygGWODRq3t_gFrcsGQNhmJ7Y9HNw=="
           # influx_host: http://localhost:8086
