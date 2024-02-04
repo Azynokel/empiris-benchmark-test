@@ -90,6 +90,7 @@ export function getBenchmarkstoRun({
   allBenchmarks,
   currentCallGraph,
   previousCallGraph,
+  changedFiles,
 }: {
   previousCallGraph: RootGraphModel;
   currentCallGraph: RootGraphModel;
@@ -150,7 +151,27 @@ export function getBenchmarkstoRun({
 
     // Check if the code of the benchmark has changed, here the previous and current dependencies are the same
     for (const dependency of previousDependencies) {
-      console.log(dependency);
+      const label = previousCallGraph
+        .getNode(dependency.id)
+        ?.attributes?.get("label");
+
+      if (!label) {
+        continue;
+      }
+
+      const [packageName, methodName] = label.split("\n");
+
+      // Check if in some changed file the packageName and methodName is present
+      if (
+        Object.values(changedFiles).some(
+          (file) =>
+            file.trimStart().startsWith(`package ${packageName}`) &&
+            file.includes(`func ${methodName}(`)
+        )
+      ) {
+        benchmarksToRun.push(benchmark);
+        break;
+      }
     }
   }
 
