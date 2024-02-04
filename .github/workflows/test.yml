@@ -13,8 +13,8 @@ jobs:
           go-version: "stable"
       - uses: hashicorp/setup-terraform@v3
       # Only for local windows testing necessary
-      - name: fix terraform file permissions
-        run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
+      # - name: fix terraform file permissions
+      #   run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
 
       - run: terraform init
         working-directory: ./infra/influxdb
