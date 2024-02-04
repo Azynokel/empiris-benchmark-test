@@ -187,13 +187,31 @@ export function getBenchmarkstoRun({
     );
 
     if (
-      previousDependencies.some(
-        (dependency, index) =>
-          previousCallGraph.getNode(dependency.id)?.attributes?.get("label") !==
-          currentCallGraph
-            .getNode(currentDependencies[index]?.id)
-            ?.attributes?.get("label")
-      )
+      previousDependencies.some((dependency, index) => {
+        const prevLabel = previousCallGraph
+          .getNode(dependency.id)
+          ?.attributes?.get("label");
+        const currentLabel = currentCallGraph
+          .getNode(currentDependencies[index]?.id)
+          ?.attributes?.get("label");
+
+        if (!prevLabel || !currentLabel) {
+          return true;
+        }
+
+        const [prevPackageName, prevMethodName] = prevLabel.split("\n");
+        const [currentPackageName, currentMethodName] =
+          currentLabel.split("\n");
+
+        core.info(
+          `Checking if ${prevPackageName} and ${prevMethodName} are different from ${currentPackageName} and ${currentMethodName}`
+        );
+
+        return (
+          prevPackageName !== currentPackageName ||
+          prevMethodName !== currentMethodName
+        );
+      })
     ) {
       // Dependencies have changed, run the benchmark
       benchmarksToRun.push(benchmark);
