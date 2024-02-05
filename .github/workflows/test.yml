@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run Analysis Script
-        uses: ADSP-EMPIRIS/analysis-ation@v1.0.1
+        uses: ADSP-EMPIRIS/analysis-action@v1.0.1
         with:
           supabase_url: ${{ secrets.SUPABASE_URL }}
           supabase_key: ${{ secrets.SUPABASE_KEY }}
