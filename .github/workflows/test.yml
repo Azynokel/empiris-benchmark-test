@@ -58,3 +58,14 @@ jobs:
       #   working-directory: ./infra/influxdb
       #   env:
       #     GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+  anaysis:
+    name: Run analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Analysis Script
+        uses: ADSP-EMPIRIS/analysis-ation@v1.0.1
+        with:
+          supabase_url: ${{ secrets.SUPABASE_URL }}
+          supabase_key: ${{ secrets.SUPABASE_KEY }}
+
