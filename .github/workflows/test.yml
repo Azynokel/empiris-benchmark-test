@@ -51,6 +51,12 @@ jobs:
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      - name: Run Analysis Script
+        uses: ADSP-EMPIRIS/analysis-action@1.0.1
+        with:
+          supabase_url: ${{ secrets.SUPABASE_URL }}
+          supabase_key: ${{ secrets.SUPABASE_KEY }}
+
       # - name: Destroy influx
       #   # Make sure infrastructure is destroyed even in case of previous failures
       #   if: always()
@@ -58,14 +64,3 @@ jobs:
       #   working-directory: ./infra/influxdb
       #   env:
       #     GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-  anaysis:
-    name: Run analysis
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run Analysis Script
-        uses: ADSP-EMPIRIS/analysis-action@1.0.1
-        with:
-          supabase_url: ${{ secrets.SUPABASE_URL }}
-          supabase_key: ${{ secrets.SUPABASE_KEY }}
-
