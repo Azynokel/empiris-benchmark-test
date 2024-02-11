@@ -35,7 +35,7 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
   return result as T;
 }
 
-const runSchema = z
+const infrastructureSchema = z
   .object({
     gcp: z.string(),
     ssh: z.object({
@@ -45,9 +45,13 @@ const runSchema = z
   })
   .optional();
 
-export type Run = z.infer<typeof runSchema>;
+export type Run = z.infer<typeof infrastructureSchema>;
 
 const configSchema = z.object({
+  name: z.string(),
+  application: z.string(),
+  description: z.string().optional(),
+
   benchmark: z.union([
     adapters[0].config.extend({
       tool: z.literal(adapters[0].tool),
@@ -59,7 +63,7 @@ const configSchema = z.object({
       .slice(2)
       .map((a) => a.config.extend({ tool: z.literal(a.tool) })),
   ]),
-  run: runSchema,
+  infrastructure: infrastructureSchema,
   visualization: z.object({
     api_key: z.string().optional(),
     api_base_url: z.string().optional().default("https://empiris.pages.dev"),

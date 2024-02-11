@@ -1,3 +1,6 @@
+name: Influx Benchmark
+application: influxdb
+
 benchmark:
   tool: go
   workdir: examples/go

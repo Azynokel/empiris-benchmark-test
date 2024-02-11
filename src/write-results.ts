@@ -7,11 +7,13 @@ const client = new http.HttpClient();
 export async function createExperimentRun({
   basePath,
   apiKey,
-  metadata: { appName, commit },
+  metadata: { appName, commit, name, description = "" },
 }: {
   basePath: string;
   apiKey: string;
   metadata: {
+    name: string;
+    description?: string;
     appName: string;
     commit: string;
   };
@@ -19,8 +21,8 @@ export async function createExperimentRun({
   const response = await client.post(
     `${basePath}/api/experiment/run`,
     JSON.stringify({
-      name: "Test",
-      description: "",
+      name,
+      description,
       generalData: [
         ["Application Name", appName],
         ["Commit Name", commit],

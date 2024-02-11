@@ -27,34 +27,41 @@ function getAdapter<T extends Config["benchmark"]["tool"]>(tool: T) {
 
 async function main() {
   const {
+    name,
+    description,
+    application,
     benchmark: { tool, ...rest },
-    run,
+    infrastructure,
     github_token,
     visualization: { api_base_url, api_key },
   } = await getConfig();
 
   let metadata: BenchmarkMetadata = {};
 
-  if (run?.gcp) {
+  if (infrastructure?.gcp) {
     try {
       // Clean up any previous instances
       await destroyComputeInstance({
         project: "empiris",
-        serviceAccount: run?.gcp,
+        serviceAccount: infrastructure?.gcp,
         isCleanUp: true,
       });
 
       metadata = await setupComputeInstance({
         project: "empiris",
-        serviceAccount: run?.gcp,
-        sshKey: run?.ssh.public_key,
+        serviceAccount: infrastructure?.gcp,
+        sshKey: infrastructure?.ssh.public_key,
       });
     } catch (e) {
       console.error("Failed to setup compute instance", e);
     }
   }
 
-  metadata = { ...metadata, runConfig: run, githubToken: github_token };
+  metadata = {
+    ...metadata,
+    runConfig: infrastructure,
+    githubToken: github_token,
+  };
 
   // Get the adapter
   const adapter = getAdapter(tool);
@@ -103,11 +110,11 @@ async function main() {
     console.error("Failed to run benchmark", e);
   }
 
-  if (run?.gcp) {
+  if (infrastructure?.gcp) {
     try {
       await destroyComputeInstance({
         project: "empiris",
-        serviceAccount: run?.gcp,
+        serviceAccount: infrastructure?.gcp,
       });
     } catch (e) {
       console.error("Failed to destroy compute instance", e);
@@ -136,7 +143,9 @@ async function main() {
       apiKey: api_key,
       basePath: api_base_url,
       metadata: {
-        appName: "InfluxDB",
+        name,
+        description,
+        appName: application,
         commit: process.env.GITHUB_SHA || "unknown",
       },
     });
