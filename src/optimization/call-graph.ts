@@ -203,9 +203,10 @@ export function getBenchmarkstoRun({
         core.info(`Current label: ${currentLabel}`);
 
         // TODO: Fix this, it's not working as expected
-        const [prevPackageName, prevMethodName] = prevLabel.split("\n");
-        const [currentPackageName, currentMethodName] =
-          currentLabel.split("\n");
+        const [prevPackageName, prevMethodName] = prevLabel.trim().split(/\s+/);
+        const [currentPackageName, currentMethodName] = currentLabel
+          .trim()
+          .split(/\s+/);
 
         core.info(
           `Checking if ${prevPackageName} and ${prevMethodName} are different from ${currentPackageName} and ${currentMethodName}`
@@ -232,7 +233,7 @@ export function getBenchmarkstoRun({
         continue;
       }
 
-      const [packageName, methodName] = label.split("\n");
+      const [packageName, methodName] = label.trim().split(/\s+/);
 
       core.info(
         `Checking if ${packageName} and ${methodName} are present in the changed files`
