@@ -11,6 +11,7 @@ func initFib(n int) int {
 }
 
 func Fib(n int) int {
+	initFib(n)
 	if n < 2 {
 		return n
 	}
