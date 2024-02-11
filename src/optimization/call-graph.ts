@@ -199,6 +199,10 @@ export function getBenchmarkstoRun({
           return true;
         }
 
+        core.info(`Previous label: ${prevLabel}`);
+        core.info(`Current label: ${currentLabel}`);
+
+        // TODO: Fix this, it's not working as expected
         const [prevPackageName, prevMethodName] = prevLabel.split("\n");
         const [currentPackageName, currentMethodName] =
           currentLabel.split("\n");
