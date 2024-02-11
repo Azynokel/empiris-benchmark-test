@@ -24,7 +24,7 @@ export async function createExperimentRun({
       name,
       description,
       generalData: [
-        ["Application Name", appName],
+        ["Application name", appName],
         ["Commit", commit],
       ],
     }),
