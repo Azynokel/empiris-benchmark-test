@@ -199,9 +199,7 @@ export function getBenchmarkstoRun({
           return true;
         }
 
-        core.info(
-          `Previous label: ${JSON.stringify(prevLabel.trim().split(/\s+/))}`
-        );
+        core.info(`Previous label: ${JSON.stringify(prevLabel.split("\\n"))}`);
         core.info(`Current label: ${currentLabel}`);
 
         // TODO: Fix this, it's not working as expected

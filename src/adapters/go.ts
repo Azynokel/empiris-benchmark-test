@@ -1,6 +1,6 @@
 import { exec } from "@actions/exec";
 import * as core from "@actions/core";
-import { createAdapter } from "../types";
+import { Metric, createAdapter } from "../types";
 import { randomizedInterleavedExecution } from "../utils";
 import { z } from "zod";
 import {
@@ -10,6 +10,25 @@ import {
   getLastChanges,
 } from "../optimization/call-graph";
 import { Graph } from "ts-graphviz";
+
+function parseGoBenchmarkOutput(output: string): Metric[] {
+  const lines = output.split("\n");
+  const benchmarks = lines
+    .filter((line) => line.startsWith("Benchmark"))
+    .map((line) => {
+      const [name, ops, nsPerOp, b, _allocs] = line.split(/\s+/);
+      return {
+        name,
+        ops,
+        nsPerOp,
+        b,
+      };
+    });
+
+  console.log(benchmarks);
+
+  return [];
+}
 
 async function getAllBenchmarks(workdir: string) {
   let out: string = "";
@@ -93,7 +112,7 @@ export const goAdapter = createAdapter({
 
     console.log("Benchmarks to run", benchmarks);
 
-    let outputs = [];
+    let outputs: string[] = [];
 
     await randomizedInterleavedExecution(
       benchmarks.map(
@@ -116,6 +135,11 @@ export const goAdapter = createAdapter({
 
     // Change directory back to the original directory
     process.chdir(currentDir);
+
+    // TODO
+    outputs.map(parseGoBenchmarkOutput);
+
+    // Average the metrics
 
     return [];
   },
