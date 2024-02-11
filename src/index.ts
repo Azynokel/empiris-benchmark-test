@@ -127,15 +127,23 @@ async function main() {
     core.warning("No metrics were collected");
   }
 
+  core.info("Writing report to report.json: " + report);
+
+  await writeFile("report.json", report);
+
   if (api_key) {
     const id = await createExperimentRun({
       apiKey: api_key,
       basePath: api_base_url,
+      metadata: {
+        appName: "InfluxDB",
+        commit: "master",
+      },
     });
 
     core.info("Experiment run id: " + id);
 
-    core.info("Writing metrics to Empiris API: " + JSON.stringify(metrics));
+    core.info("Writing metrics to Empiris API..");
 
     // Write the results to the Empiris API
     await writeMetrics(metrics, {
@@ -146,10 +154,6 @@ async function main() {
   } else {
     core.info("No API key provided, skipping writing results to api");
   }
-
-  core.info("Writing report to report.json: " + report);
-
-  await writeFile("report.json", report);
 
   core.info("Benchmark finished");
 }

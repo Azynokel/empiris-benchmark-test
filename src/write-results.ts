@@ -7,15 +7,24 @@ const client = new http.HttpClient();
 export async function createExperimentRun({
   basePath,
   apiKey,
+  metadata: { appName, commit },
 }: {
   basePath: string;
   apiKey: string;
+  metadata: {
+    appName: string;
+    commit: string;
+  };
 }) {
   const response = await client.post(
-    `https://${basePath}/api/experiment/run`,
+    `${basePath}/api/experiment/run`,
     JSON.stringify({
       name: "Test",
       description: "",
+      generalData: [
+        ["Application Name", appName],
+        ["Commit Name", commit],
+      ],
     }),
     {
       authorization: `Bearer ${apiKey}`,
@@ -53,7 +62,12 @@ export async function writeMetrics(
   }
 
   if (timeSeries.length > 0) {
-    core.warning("Time series metrics are not implemented yet");
+    await writeTimeSeriesMetrics({
+      basePath,
+      timeSeries,
+      experimentRunId,
+      apiKey,
+    });
   }
 }
 
@@ -69,7 +83,7 @@ export async function writeDataframeMetrics({
   apiKey: string;
 }) {
   await client.post(
-    `https://${basePath}/api/dataframe`,
+    `${basePath}/api/dataframe`,
     JSON.stringify({
       experimentRunId,
       data: dataframes.map(({ metric, specifier, unit, value }) => [
@@ -83,4 +97,35 @@ export async function writeDataframeMetrics({
       authorization: `Bearer ${apiKey}`,
     }
   );
+}
+
+export async function writeTimeSeriesMetrics({
+  basePath,
+  timeSeries,
+  experimentRunId,
+  apiKey,
+}: {
+  experimentRunId: number;
+  basePath: string;
+  timeSeries: TimeSeriesMetric[];
+  apiKey: string;
+}) {
+  for (const { metric, timestamps, values } of timeSeries) {
+    const response = await client.post(
+      `${basePath}/api/timeseries`,
+      JSON.stringify({
+        experimentRunId,
+        metric,
+        timestamps,
+        values,
+      }),
+      {
+        authorization: `Bearer ${apiKey}`,
+      }
+    );
+
+    if (response.message.statusCode !== 200) {
+      core.warning(`Failed to write time series metric ${metric}`);
+    }
+  }
 }

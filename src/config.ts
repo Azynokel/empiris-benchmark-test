@@ -62,7 +62,7 @@ const configSchema = z.object({
   run: runSchema,
   visualization: z.object({
     api_key: z.string().optional(),
-    api_base_url: z.string().optional().default("empiris.pages.dev"),
+    api_base_url: z.string().optional().default("https://empiris.pages.dev"),
   }),
   github_token: z.string().optional(),
 });

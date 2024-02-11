@@ -4,7 +4,6 @@ benchmark:
   influx_token: "{{ $env.influx_token }}"
   host: "{{ $env.influx_host }}"
   database: test
-  time: 2m
 
 run:
   gcp: "{{ $env.service_account }}"

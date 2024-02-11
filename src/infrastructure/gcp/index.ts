@@ -285,9 +285,7 @@ export async function destroyComputeInstance({
       project,
       firewall: "empiris",
     });
-  } catch (e) {
-    console.error("Failed to destroy firewall", e);
-  }
+  } catch (e) {}
 
   try {
     core.info("Destroying ip..");
@@ -297,9 +295,7 @@ export async function destroyComputeInstance({
       region: "europe-west1",
       address: "empiris",
     });
-  } catch (e) {
-    console.error("Failed to destroy ip", e);
-  }
+  } catch (e) {}
 
   try {
     core.info("Destroying compute instance..");
@@ -319,9 +315,7 @@ export async function destroyComputeInstance({
       project,
       zone,
     });
-  } catch (e) {
-    console.error("Failed to destroy compute instance", e);
-  }
+  } catch (e) {}
 
   try {
     core.info("Destroying network..");
@@ -336,7 +330,5 @@ export async function destroyComputeInstance({
       operation: networkResult.latestResponse?.name,
       project,
     });
-  } catch (e) {
-    console.error("Failed to destroy network", e);
-  }
+  } catch (e) {}
 }

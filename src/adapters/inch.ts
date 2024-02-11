@@ -1,7 +1,7 @@
 import { exec } from "@actions/exec";
 import * as core from "@actions/core";
-import { Metric, createAdapter } from "../types";
-import { waitOn } from "../utils";
+import { Metric, TimeSeriesMetric, createAdapter } from "../types";
+// import { waitOn } from "../utils";
 import { z } from "zod";
 import { NodeSSH } from "node-ssh";
 
@@ -14,19 +14,14 @@ const ssh = new NodeSSH();
  */
 export function parseOutput(_out: string): Metric[] {
   // Initialize metrics
-  const metrics: Metric[] = [];
+  const metrics: TimeSeriesMetric[] = [];
   // Split the output into lines
   const lines = _out.split("\n");
 
   // Initialize metrics
-  // let totalPoints = 0;
-  let totalThroughput = 0;
-  let currentThroughput = 0;
-  let errors = 0;
-  /*let avgLatency = 0;
-  let p90Latency = 0;
-  let p95Latency = 0;
-  let p99Latency = 0; */
+  const currentThroughputs: number[] = [];
+  const errors: number[] = [];
+  const avgLatencies: number[] = [];
 
   // Process each line
   for (const line of lines) {
@@ -37,45 +32,29 @@ export function parseOutput(_out: string): Metric[] {
         /T=\d+ (\d+) points written.*Total throughput: (\d+\.\d+).*Current throughput: (\d+(?:\.\d+)?).*Errors: (\d+)(?: \| μ: (\d+\.\d+)ms, 90%: (\d+\.\d+)ms, 95%: (\d+\.\d+)ms, 99%: (\d+\.\d+)ms)?/
       );
       if (match) {
-        // totalPoints = parseInt(match[1]);
-        totalThroughput = parseFloat(match[2]);
-        currentThroughput = parseFloat(match[3]);
-        errors = parseInt(match[4]);
-        /* avgLatency = parseFloat(match[5]);
-        p90Latency = parseFloat(match[6]);
-        p95Latency = parseFloat(match[7]);
-        p99Latency = parseFloat(match[8]); */
-      }
-      // Create DataframeMetric objects and add them to the list of metrics
-      metrics.push(
-        {
-          type: "dataframe",
-          metric: "throughput",
-          value: totalThroughput,
-          unit: "pt/sec",
-          specifier: "total",
-        },
-        {
-          type: "dataframe",
-          metric: "throughput",
-          value: currentThroughput,
-          unit: "val/sec",
-          specifier: "current",
-        },
-        {
-          type: "dataframe",
-          metric: "error_rate",
-          value: errors,
-          unit: "errors",
-          specifier: null,
+        currentThroughputs.push(parseFloat(match[3]));
+        errors.push(parseInt(match[4]));
+        // If no latency is present, skip the line
+        if (typeof match[5] === "undefined") {
+          continue;
         }
-        /* { type: 'dataframe', metric: 'latency', value: avgLatency, unit: 'ms', specifier: 'μ' },
-        { type: 'dataframe', metric: 'latency', value: p90Latency, unit: 'ms', specifier: '90%' },
-        { type: 'dataframe', metric: 'latency', value: p95Latency, unit: 'ms', specifier: '95%' },
-        { type: 'dataframe', metric: 'latency', value: p99Latency, unit: 'ms', specifier: '99%' }, */
-      );
+        avgLatencies.push(parseFloat(match[5]));
+      }
     }
   }
+
+  metrics.push({
+    type: "time_series",
+    metric: "latency",
+    timestamps: avgLatencies.map((_, i) => i),
+    values: avgLatencies,
+  });
+  metrics.push({
+    type: "time_series",
+    metric: "throughput",
+    timestamps: currentThroughputs.map((_, i) => i),
+    values: currentThroughputs,
+  });
 
   return metrics;
 }
@@ -94,23 +73,35 @@ export const inchAdapter = createAdapter({
     database: z.string().optional().default("empiris"),
     host: z.string().min(1).optional().default("http://localhost:8086"),
     maxErrors: z.number().optional(),
-    time: z.string().optional().default("1m"),
+    time: z.string().optional(),
+    concurrency: z.number().optional().default(1),
+    measurements: z.number().optional().default(100),
   }),
   dependencies: ["go"],
   setup() {
     return ["go install github.com/influxdata/inch/cmd/inch@latest"];
   },
   run: async ({
-    options: { influx_token, version, database, host, maxErrors, time },
+    options: {
+      influx_token,
+      version,
+      database,
+      host,
+      maxErrors,
+      time,
+      concurrency,
+      measurements,
+    },
     metadata: { ip, runConfig },
   }) => {
     core.info(`Waiting for ${host} to be ready...`);
 
-    await waitOn({
+    // TODO: Remove comments
+    /* await waitOn({
       ressources: [`${host}/health`],
       // Timeout after 5 minutes
       timeout: 1000 * 60 * 5,
-    });
+    }); */
 
     core.info(`Running inch...`);
     let output = "";
@@ -128,7 +119,9 @@ export const inchAdapter = createAdapter({
           version === 2 ? "-v2" : ""
         } -v -db ${database} -host ${host} ${
           typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`
-        } ${typeof time === "undefined" ? "" : `-time ${time}`}`
+        } ${
+          typeof time === "undefined" ? "" : `-time ${time}`
+        } -c ${concurrency} -m ${measurements}`
       );
 
       core.info(result.stdout);
@@ -137,19 +130,14 @@ export const inchAdapter = createAdapter({
     } else {
       // Run inch locally
       await exec(
-        "inch",
-        [
-          "-token",
-          influx_token,
-          version === 2 ? "-v2" : "",
-          "-v",
-          "-db",
-          database,
-          "-host",
-          host,
-          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`,
-          typeof time === "undefined" ? "" : `-time ${time}`,
-        ],
+        `inch -token ${influx_token} ${
+          version === 2 ? "-v2" : ""
+        } -v -db ${database} ${
+          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`
+        } ${
+          typeof time === "undefined" ? "" : `-time ${time}`
+        } -c ${concurrency} -m ${measurements} -host ${host}`,
+        [],
         {
           listeners: {
             stdout: (data: Buffer) => {
