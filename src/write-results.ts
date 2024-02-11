@@ -84,7 +84,7 @@ export async function writeDataframeMetrics({
   dataframes: DataframeMetric[];
   apiKey: string;
 }) {
-  await client.post(
+  const response = await client.post(
     `${basePath}/api/dataframe`,
     JSON.stringify({
       experimentRunId,
@@ -99,6 +99,12 @@ export async function writeDataframeMetrics({
       authorization: `Bearer ${apiKey}`,
     }
   );
+
+  if (response.message.statusCode !== 200) {
+    core.warning(
+      `Failed to write dataframe metrics: ${await response.readBody()}`
+    );
+  }
 }
 
 export async function writeTimeSeriesMetrics({
