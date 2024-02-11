@@ -14,6 +14,7 @@ export type TimeSeriesMetric = {
   metric: "latency" | "throughput" | "error_rate";
   timestamps: number[];
   values: number[];
+  unit?: string;
 };
 
 export type Metric = DataframeMetric | TimeSeriesMetric;

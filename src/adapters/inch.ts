@@ -48,12 +48,14 @@ export function parseOutput(_out: string): Metric[] {
     metric: "latency",
     timestamps: avgLatencies.map((_, i) => i),
     values: avgLatencies,
+    unit: "ms",
   });
   metrics.push({
     type: "time_series",
     metric: "throughput",
     timestamps: currentThroughputs.map((_, i) => i),
     values: currentThroughputs,
+    unit: "val/sec",
   });
 
   return metrics;

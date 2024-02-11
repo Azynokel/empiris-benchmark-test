@@ -118,7 +118,7 @@ export async function writeTimeSeriesMetrics({
   timeSeries: TimeSeriesMetric[];
   apiKey: string;
 }) {
-  for (const { metric, timestamps, values } of timeSeries) {
+  for (const { metric, timestamps, values, unit } of timeSeries) {
     const response = await client.post(
       `${basePath}/api/timeseries`,
       JSON.stringify({
@@ -126,6 +126,7 @@ export async function writeTimeSeriesMetrics({
         metric,
         timestamps,
         values,
+        unit,
       }),
       {
         authorization: `Bearer ${apiKey}`,
