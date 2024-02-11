@@ -11,6 +11,7 @@ import { writeFile } from "fs/promises";
 import { NodeSSH } from "node-ssh";
 import { waitOn } from "./utils";
 import { exec } from "@actions/exec";
+import { createExperimentRun, writeMetrics } from "./write-results";
 
 const ssh = new NodeSSH();
 
@@ -29,6 +30,7 @@ async function main() {
     benchmark: { tool, ...rest },
     run,
     github_token,
+    visualization: { api_base_url, api_key },
   } = await getConfig();
 
   let metadata: BenchmarkMetadata = {};
@@ -119,6 +121,32 @@ async function main() {
     null,
     2
   );
+
+  // Send the report to the server
+  if (metrics.length === 0) {
+    core.warning("No metrics were collected");
+  }
+
+  if (api_key) {
+    const id = await createExperimentRun({
+      apiKey: api_key,
+      basePath: api_base_url,
+    });
+
+    core.info("Experiment run id: " + id);
+
+    core.info("Writing metrics to Empiris API: " + JSON.stringify(metrics));
+
+    // Write the results to the Empiris API
+    await writeMetrics(metrics, {
+      basePath: api_base_url,
+      experimentRunId: id,
+      apiKey: api_key,
+    });
+  } else {
+    core.info("No API key provided, skipping writing results to api");
+  }
+
   core.info("Writing report to report.json: " + report);
 
   await writeFile("report.json", report);
