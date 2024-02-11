@@ -127,7 +127,9 @@ export async function writeTimeSeriesMetrics({
     );
 
     if (response.message.statusCode !== 200) {
-      core.warning(`Failed to write time series metric ${metric}`);
+      core.warning(
+        `Failed to write time series metric ${metric}: ${await response.readBody()}`
+      );
     }
   }
 }
