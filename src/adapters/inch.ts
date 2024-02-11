@@ -1,9 +1,9 @@
 import { exec } from "@actions/exec";
 import * as core from "@actions/core";
 import { Metric, TimeSeriesMetric, createAdapter } from "../types";
-// import { waitOn } from "../utils";
 import { z } from "zod";
 import { NodeSSH } from "node-ssh";
+import { waitOn } from "../utils";
 
 const ssh = new NodeSSH();
 
@@ -96,12 +96,11 @@ export const inchAdapter = createAdapter({
   }) => {
     core.info(`Waiting for ${host} to be ready...`);
 
-    // TODO: Remove comments
-    /* await waitOn({
+    await waitOn({
       ressources: [`${host}/health`],
       // Timeout after 5 minutes
       timeout: 1000 * 60 * 5,
-    }); */
+    });
 
     core.info(`Running inch...`);
     let output = "";

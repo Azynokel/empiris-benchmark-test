@@ -127,7 +127,7 @@ async function main() {
     core.warning("No metrics were collected");
   }
 
-  core.info("Writing report to report.json: " + report);
+  core.info("Writing report to report.json");
 
   await writeFile("report.json", report);
 
@@ -137,7 +137,7 @@ async function main() {
       basePath: api_base_url,
       metadata: {
         appName: "InfluxDB",
-        commit: "master",
+        commit: process.env.GITHUB_SHA || "unknown",
       },
     });
 
