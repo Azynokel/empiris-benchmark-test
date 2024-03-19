@@ -1,4 +1,3 @@
-import { exec } from "@actions/exec";
 import { createAdapter } from "../types";
 import { z } from "zod";
 
@@ -7,6 +6,7 @@ import { z } from "zod";
  */
 export const tsbsAdapter = createAdapter({
   tool: "tsbs",
+  dependsOn: ["go"],
   config: z.object({
     database: z.object({
       type: z.union([
@@ -31,16 +31,31 @@ export const tsbsAdapter = createAdapter({
     batch_size: z.number(),
   }),
   setup: async ({
+    exec,
     options: {
       database: { type },
     },
   }) => {
-    return [
+    const commands = [
       "go install github.com/timescale/tsbs/cmd/tsbs_generate_data@latest",
       `go install github.com/timescale/tsbs/cmd/tsbs_load_${type}@latest`,
     ];
+
+    for (const command of commands) {
+      const result = await exec(command);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: `Failed to run: ${command}`,
+        };
+      }
+    }
+
+    return { success: true };
   },
   run: async ({
+    exec,
     options: {
       database: { type, name, host, password },
       seed,
@@ -50,9 +65,15 @@ export const tsbsAdapter = createAdapter({
       `tsbs_generate_data --use-case=cpu-only --seed=${seed} --scale=1 --timestamp-start=2020-01-01T00:00:00Z --timestamp-end=2020-01-01T00:00:00Z --log-interval=1s --format=influx | gzip > data.gz`
     );
 
-    await exec(
+    const result = await exec(
       `tsbs_load_${type} --workers=1 --batch-size=1000 --reporting-period=1s --urls=${host} --admin-db-name=${name} --pass=${password} --file=data.gz`
     );
+
+    if (!result.success) {
+      return [];
+    }
+
+    // Parse the result and return the metrics
 
     return [];
   },

@@ -1,11 +1,7 @@
-import { exec } from "@actions/exec";
 import * as core from "@actions/core";
 import { Metric, TimeSeriesMetric, createAdapter } from "../types";
 import { z } from "zod";
-import { NodeSSH } from "node-ssh";
 import { waitOn } from "../utils";
-
-const ssh = new NodeSSH();
 
 /**
  * Parse the output of inch and return a list of metrics
@@ -66,6 +62,7 @@ export function parseOutput(_out: string): Metric[] {
  */
 export const inchAdapter = createAdapter({
   tool: "inch",
+  dependsOn: ["go"],
   config: z.object({
     influx_token: z.string(),
     version: z
@@ -79,11 +76,22 @@ export const inchAdapter = createAdapter({
     concurrency: z.number().optional().default(1),
     measurements: z.number().optional().default(100),
   }),
-  dependencies: ["go"],
-  setup() {
-    return ["go install github.com/influxdata/inch/cmd/inch@latest"];
+  async setup({ exec }) {
+    const result = await exec(
+      "go install github.com/influxdata/inch/cmd/inch@latest"
+    );
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: "Failed to install inch",
+      };
+    }
+
+    return { success: true };
   },
   run: async ({
+    exec,
     options: {
       influx_token,
       version,
@@ -94,7 +102,8 @@ export const inchAdapter = createAdapter({
       concurrency,
       measurements,
     },
-    metadata: { ip, runConfig },
+    metadata: {},
+    isLocal,
   }) => {
     core.info(`Waiting for ${host} to be ready...`);
 
@@ -107,15 +116,26 @@ export const inchAdapter = createAdapter({
     core.info(`Running inch...`);
     let output = "";
 
-    if (ip && runConfig) {
-      await ssh.connect({
-        host: ip,
-        username: "empiris",
-        privateKey: runConfig.ssh.private_key,
-      });
+    if (isLocal) {
+      // Run inch locally
+      const result = await exec(
+        `inch -token ${influx_token} ${
+          version === 2 ? "-v2" : ""
+        } -v -db ${database} ${
+          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`
+        } ${
+          typeof time === "undefined" ? "" : `-time ${time}`
+        } -c ${concurrency} -m ${measurements} -host ${host}`
+      );
 
+      if (!result.success) {
+        return [];
+      }
+
+      output = result.stdout;
+    } else {
       // Run inch on the remote machine
-      const result = await ssh.execCommand(
+      const result = await exec(
         `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && inch -token ${influx_token} ${
           version === 2 ? "-v2" : ""
         } -v -db ${database} -host ${host} ${
@@ -125,28 +145,11 @@ export const inchAdapter = createAdapter({
         } -c ${concurrency} -m ${measurements}`
       );
 
-      core.info(result.stdout);
+      if (!result.success) {
+        return [];
+      }
 
       output = result.stdout;
-    } else {
-      // Run inch locally
-      await exec(
-        `inch -token ${influx_token} ${
-          version === 2 ? "-v2" : ""
-        } -v -db ${database} ${
-          typeof maxErrors === "undefined" ? "" : `-max-errors ${maxErrors}`
-        } ${
-          typeof time === "undefined" ? "" : `-time ${time}`
-        } -c ${concurrency} -m ${measurements} -host ${host}`,
-        [],
-        {
-          listeners: {
-            stdout: (data: Buffer) => {
-              output += data.toString();
-            },
-          },
-        }
-      );
     }
 
     return parseOutput(output);

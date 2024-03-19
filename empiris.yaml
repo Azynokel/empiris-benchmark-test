@@ -8,11 +8,20 @@ benchmark:
   host: "{{ $env.influx_host }}"
   database: test
 
-infrastructure:
-  gcp: "{{ $env.service_account }}"
-  ssh:
-    private_key: "{{ $env.ssh_private_key }}"
-    public_key: "{{ $env.ssh_public_key }}"
+# benchmark:
+#   tool: artillery
+#   configPath: ./loadtest.yml
+
+platform:
+  on: gcp-vm
+  project: empiris
+  instance:
+    machine_type: n2-highcpu-4
+  auth:
+    service_account: "{{ $env.service_account }}"
+    ssh:
+      private_key: "{{ $env.ssh_private_key }}"
+      public_key: "{{ $env.ssh_public_key }}"
 
 # benchmark:
 #   tool: tsbs

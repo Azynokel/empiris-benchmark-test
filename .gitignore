@@ -36,3 +36,8 @@ terraform.rc
 .env
 
 tmp
+
+infra/lambda-firecracker
+infra/lambda-docker
+examples/serverless-ts
+request-queue

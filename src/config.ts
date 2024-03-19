@@ -25,6 +25,12 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "string") {
       result[key] = injectEnvVars(value);
+    }
+    // If array
+    else if (Array.isArray(value)) {
+      result[key] = value.map((v) => {
+        return injectEnvVarsRecursive(v as Record<string, unknown>);
+      });
     } else if (typeof value === "object" && value) {
       result[key] = injectEnvVarsRecursive(value as Record<string, unknown>);
     } else {
@@ -35,17 +41,47 @@ export function injectEnvVarsRecursive<T extends Record<string, unknown>>(
   return result as T;
 }
 
-const infrastructureSchema = z
+const platformSchema = z
   .object({
-    gcp: z.string(),
-    ssh: z.object({
-      public_key: z.string(),
-      private_key: z.string(),
+    on: z.literal("gcp-vm"),
+    project: z.string(),
+    region: z.string().optional().default("europe-west1"),
+    // Config for GCP VM
+    instance: z
+      .object({
+        machine_type: z.string().optional().default("e2-medium"),
+        zone: z.string().optional().default("europe-west1-b"),
+        // We support copying local files to the VM
+        copy: z
+          .array(
+            z.object({
+              local: z.string(),
+              remote: z.string(),
+            })
+          )
+          .optional()
+          .default([]),
+      })
+      .optional()
+      .default({ machine_type: "n1-standard-4", zone: "europe-west1-b" }),
+
+    auth: z.object({
+      service_account: z.string(),
+      ssh: z.object({
+        public_key: z.string(),
+        private_key: z.string(),
+      }),
     }),
   })
-  .optional();
+  .or(
+    z.object({
+      on: z.literal("local"),
+    })
+  )
+  .optional()
+  .default({ on: "local" });
 
-export type Run = z.infer<typeof infrastructureSchema>;
+export type Run = z.infer<typeof platformSchema>;
 
 const configSchema = z.object({
   name: z.string(),
@@ -63,11 +99,13 @@ const configSchema = z.object({
       .slice(2)
       .map((a) => a.config.extend({ tool: z.literal(a.tool) })),
   ]),
-  infrastructure: infrastructureSchema,
-  visualization: z.object({
-    api_key: z.string().optional(),
-    api_base_url: z.string().optional().default("https://empiris.pages.dev"),
-  }),
+  platform: platformSchema,
+  visualization: z
+    .object({
+      api_key: z.string().optional(),
+      api_base_url: z.string().optional().default("https://empiris.pages.dev"),
+    })
+    .optional(),
   github_token: z.string().optional(),
 });
 
@@ -83,7 +121,7 @@ export async function getConfig() {
   const parsedConfig = configSchema.safeParse(parse(configFile));
 
   if (!parsedConfig.success) {
-    throw new Error("Invalid config");
+    throw new Error("Invalid config: " + parsedConfig.error.message);
   }
 
   return injectEnvVarsRecursive(parsedConfig.data);

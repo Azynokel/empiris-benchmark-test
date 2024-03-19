@@ -43,7 +43,7 @@ export async function waitOn({
 
 export async function randomizedInterleavedExecution(
   fns: (() => Promise<void>)[],
-  iterations = 3
+  iterations: number
 ) {
   for (let i = 0; i < iterations; i++) {
     // Randomly shuffle the array
@@ -81,4 +81,8 @@ export function toMs(time: string) {
 
     return acc;
   }, 0);
+}
+
+export function isExecSuccess(code: number) {
+  return code === 0;
 }

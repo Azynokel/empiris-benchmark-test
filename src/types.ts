@@ -25,19 +25,51 @@ export type BenchmarkMetadata = {
   githubToken?: string;
 };
 
+export type ExecResult =
+  | {
+      success: true;
+      stdout: string;
+    }
+  | {
+      success: false;
+      stderr: string;
+    };
+
+export type ExecFn = (cmd: string) => Promise<ExecResult>;
+
+export type BenchmarkDependency<T extends string> = {
+  name: T;
+  getInstallCMD: () => string;
+  getCheckIfInstalledCMD: () => string;
+};
+
 export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
   config: O;
-  dependencies?: "go"[];
+  dependsOn?: ("go" | "node")[];
   setup: (options: {
+    isLocal: boolean;
+    exec: ExecFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
-  }) => Promise<string[]> | string[];
+  }) => Promise<
+    | {
+        success: true;
+      }
+    | {
+        success: false;
+        error: string;
+      }
+  >;
   run: (options: {
+    isLocal: boolean;
+    exec: ExecFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<Metric[]>;
   teardown?: (options: {
+    isLocal: boolean;
+    exec: ExecFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<void>;
