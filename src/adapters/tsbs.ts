@@ -1,3 +1,4 @@
+import * as core from "@actions/core";
 import { createAdapter } from "../types";
 import { z } from "zod";
 
@@ -74,6 +75,7 @@ export const tsbsAdapter = createAdapter({
     }
 
     // Parse the result and return the metrics
+    core.info(result.stdout);
 
     return [];
   },
