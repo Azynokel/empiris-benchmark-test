@@ -109,6 +109,8 @@ export async function buildCallGraph(workdir: string) {
 
   const dotModel = await readFile(DOT_FILE, "utf-8");
 
+  core.info("Dot model: " + dotModel);
+
   const graph = fromDot(dotModel.replaceAll("\n", " "));
 
   if (process.env.ENV !== "dev") {
