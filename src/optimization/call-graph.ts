@@ -25,24 +25,31 @@ export async function retrievePreviousCallGraph(token: string) {
   core.info(`Owner: ${repo?.[0]}`);
   core.info(`Repo: ${repo?.[1]}`);
 
-  const { data: runs } = await octokit.rest.actions.listWorkflowRuns({
-    owner: repo?.[0] as string,
-    repo: repo?.[1] as string,
-    workflow_id: process.env.GITHUB_WORKFLOW_ID as string,
-    status: "completed",
-  });
+  let lastRunId: number;
 
-  if (runs.total_count === 0) {
-    core.info("No previous runs found");
+  try {
+    const { data: runs } = await octokit.rest.actions.listWorkflowRuns({
+      owner: repo?.[0] as string,
+      repo: repo?.[1] as string,
+      workflow_id: process.env.GITHUB_WORKFLOW_ID as string,
+      status: "completed",
+    });
+
+    if (runs.total_count === 0) {
+      core.info("No previous runs found");
+      return new Graph();
+    }
+
+    lastRunId = runs.workflow_runs.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )[0].id;
+
+    core.info(`Last run id: ${lastRunId}`);
+  } catch (error) {
+    core.error("Error while getting the last run: " + error);
     return new Graph();
   }
-
-  const lastRunId = runs.workflow_runs.sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )[0].id;
-
-  core.info(`Last run id: ${lastRunId}`);
 
   if (process.env.ENV === "dev") {
     return new Graph();
