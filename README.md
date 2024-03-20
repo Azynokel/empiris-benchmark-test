@@ -25,7 +25,7 @@ on:
 
 jobs:
   benchmark:
-    name: Performance regression check
+    name: Benchmark
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
         with:
           fetch-depth: 5
       - uses: actions/setup-go@v4
-	  	with:
+	    with:
 		  go-version: "stable"
       - name: Run Benchmark
         uses: ./
