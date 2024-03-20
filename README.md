@@ -222,7 +222,7 @@ export type ArtilleryAdapter = typeof artilleryAdapter;
 ## Next Steps
 
 - More Adapters like Artillery (currently wip)
-- Duet Benchmark
+- Duet Benchmarking
 - VPC Peering
 - Scalable and Distributed Benchmarking Clients
 - Optimizations for Cloud Ressource Provisioning
