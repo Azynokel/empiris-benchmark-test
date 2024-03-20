@@ -8,7 +8,7 @@ Welcome to EMPIRIS, a comprehensive benchmarking Github action designed to evalu
 - Continuous Micro Benchmarks with Go and randomized multiple interleaved trials (RMIT)
 - Run Benchmarks in your Cloud
 - Designed to be extended
-- Visualization and Analysis via [empiris.pages.dev](https://empiris.pages,dev) but also open for your own analysis
+- Visualization and Analysis via [empiris.pages.dev](https://empiris.pages.dev) but also open for your own analysis
 
 ## Get Started
 
@@ -136,7 +136,7 @@ visualization:
 
 ### Visualization
 
-The metrics obtained from a benchmark experiment can stored and visualized via our service `empiris.pages.dev`,
+The metrics obtained from a benchmark experiment can stored and visualized via our service [empiris.pages.dev](https://empiris.pages.dev),
 however, this is optional and we also write the results under `report.json`. You can bring your own analysis and visualization based on the `report.json`.
 
 ### Complete Example
