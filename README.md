@@ -141,7 +141,7 @@ however, this is optional and we also write the results under `report.json`. You
 
 ### Analysis
 
-Similarly to the visualization we provide our own implementation for an (analysis action)[https://github.com/ADSP-EMPIRIS/analysis-action] or you can bring your own via the `report.json`.
+Similarly to the visualization we provide our own implementation for an [analysis action](https://github.com/ADSP-EMPIRIS/analysis-action) or you can bring your own via the `report.json`.
 
 ### Complete Example
 
