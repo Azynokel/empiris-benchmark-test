@@ -102,7 +102,7 @@ platform:
 visualization:
   api_key: "{{ $env.api_key }}" # Visit empiris.pages.dev to obtain an API Key
 
-# The Github Token is required for optimizating the Go benchmarks
+# The Github Token is required for optimizing the Go benchmarks
 # The token should be allowed to read/write artifacts and read previous action runs
 github_token: "{{ $env.github_token }}"
 ```
@@ -175,8 +175,7 @@ In watch mode:
 pnpm build --watch
 ```
 
-Depending on the example you want to run you should also have a .env secret file with the according key-value pairs,
-cloud secrets for example.
+Depending on the example you want to run you should also have a .env secret file, you can start from the `env.example`.
 
 For local testing, you can use [act](https://github.com/nektos/act).
 
