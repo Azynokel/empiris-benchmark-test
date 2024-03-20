@@ -118,7 +118,7 @@ export const goAdapter = createAdapter({
           : await retrievePreviousCallGraph(githubToken);
       // Note: Also uploads a new call graph
       const currentCallGraph = await buildCallGraph(packageName);
-      const lastChanges = await getLastChanges(workdir);
+      const lastChanges = await getLastChanges(".");
 
       // Filter out all non .go files
       const goFiles = Object.fromEntries(
