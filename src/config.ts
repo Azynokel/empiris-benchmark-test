@@ -121,7 +121,9 @@ export async function getConfig() {
   const parsedConfig = configSchema.safeParse(parse(configFile));
 
   if (!parsedConfig.success) {
-    throw new Error("Invalid config: " + parsedConfig.error.message);
+    throw new Error(
+      "Invalid config: " + JSON.stringify(parsedConfig.error, null, 2)
+    );
   }
 
   return injectEnvVarsRecursive(parsedConfig.data);

@@ -3,11 +3,12 @@ application: influxdb
 
 benchmark:
   tool: tsbs
-  sut: timescaledb
-  username: admin
-  password: "{{ $env.influx_token }}"
-  host: "{{ $env.influx_host }}"
-  database: test
+  database:
+    type: victoriametrics
+    user: admin
+    password: "{{ $env.influx_token }}"
+    host: "{{ $env.influx_host }}"
+    name: test
 
 # benchmark:
 #   tool: inch

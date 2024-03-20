@@ -14,4 +14,4 @@ sudo apt-get update -y
 
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
-docker run -it --rm -v `pwd`/victoria-metrics-data:/victoria-metrics-data -p 80:8428 victoriametrics/victoria-metrics:latest
+docker run -d -it --rm -v `pwd`/victoria-metrics-data:/victoria-metrics-data -p 80:8428 victoriametrics/victoria-metrics:latest

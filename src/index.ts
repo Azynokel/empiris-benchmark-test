@@ -31,7 +31,11 @@ function getAdapter<T extends Config["benchmark"]["tool"]>(tool: T) {
 
 async function localExec(cmd: string) {
   try {
-    const { exitCode, stderr, stdout } = await getExecOutput(cmd);
+    const { exitCode, stderr, stdout } = await getExecOutput(cmd, [], {
+      silent: true,
+      // Set output to nothing
+      outStream: undefined,
+    });
 
     if (isExecSuccess(exitCode)) {
       return {
@@ -191,7 +195,9 @@ async function main() {
         ressources: [`http://${ip}`],
       });
 
-      core.info(`Copying files to ${ip}...`);
+      if (runConfig.instance.copy.length > 0) {
+        core.info(`Copying files to ${ip}...`);
+      }
 
       for (const path of runConfig.instance.copy) {
         await copyFileToRemote(ssh, {

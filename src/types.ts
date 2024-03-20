@@ -46,7 +46,7 @@ export type BenchmarkDependency<T extends string> = {
 export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
   config: O;
-  dependsOn?: ("go" | "node")[];
+  dependsOn?: ("go" | "node" | "make")[];
   setup: (options: {
     isLocal: boolean;
     exec: ExecFn;

@@ -26,8 +26,9 @@ resource "google_compute_address" "tf-ip" {
 
 # Setup compute instance in GCP
 resource "google_compute_instance" "tf-instance" {
-  name         = "influx-instance"
-  machine_type = "e2-medium"
+  name = "influx-instance"
+  # machine_type = "e2-medium"
+  machine_type = "n2-highcpu-4"
   zone         = var.gcp_zone
 
   # Tag the instance so we can apply firewall rules to it

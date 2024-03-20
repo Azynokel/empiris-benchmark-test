@@ -78,7 +78,7 @@ export const goAdapter = createAdapter({
     workdir: z.string().optional().default("."),
     iterations: z.number().optional().default(1),
     package: z.string().optional().default("."),
-    optimization: z.boolean().optional().default(true),
+    optimization: z.boolean().optional().default(false),
   }),
   dependsOn: ["go"],
   setup: async () => {

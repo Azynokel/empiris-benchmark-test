@@ -17,7 +17,7 @@ type SetupInstanceOptions = {
   sshKey: string;
 };
 
-export function createStartupScript(dependencies: ("go" | "node")[]) {
+export function createStartupScript(dependencies: ("go" | "node" | "make")[]) {
   const installDeps = dependencies
     .map((dep) => getDependency(dep).getInstallCMD())
     .join(" && ");

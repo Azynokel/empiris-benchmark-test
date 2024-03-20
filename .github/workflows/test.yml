@@ -14,31 +14,31 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "stable"
-      # - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
       # Only for local windows testing necessary
-      # - name: fix terraform file permissions
-      #   run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
+      - name: fix terraform file permissions
+        run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
 
-      # - run: terraform init
-      #   working-directory: ./infra/influxdb
-      #   env:
-      #     GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - run: terraform init
+        working-directory: ./infra/victoriametrics
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
-      # - name: Start influx
-      #   id: start-influx
-      #   working-directory: ./infra/influxdb
-      #   run: |
-      #     TF_VAR_gcp_project=empiris terraform apply -auto-approve
-      #     ip_address=$(terraform output -raw ip)
-      #     echo $ip_address
-      #     echo "IP_ADDRESS=$ip_address" >> "$GITHUB_OUTPUT"
-      #   env:
-      #     GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: Start influx
+        id: start-influx
+        working-directory: ./infra/victoriametrics
+        run: |
+          TF_VAR_gcp_project=empiris terraform apply -auto-approve
+          ip_address=$(terraform output -raw ip)
+          echo $ip_address
+          echo "IP_ADDRESS=$ip_address" >> "$GITHUB_OUTPUT"
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Run inch
         uses: ./
         with:
-          config_path: empiris.micro.yaml
+          config_path: empiris.yaml
         env:
           GITHUB_WORKFLOW_ID: test.yml
           api_key: ${{ secrets.EMPIRIS_API_KEY }}
@@ -57,10 +57,10 @@ jobs:
       #     supabase_url: ${{ secrets.SUPABASE_URL }}
       #     supabase_key: ${{ secrets.SUPABASE_KEY }}
 
-      # - name: Destroy influx
-      #   # Make sure infrastructure is destroyed even in case of previous failures
-      #   if: always()
-      #   run: TF_VAR_gcp_project=empiris terraform destroy -auto-approve
-      #   working-directory: ./infra/influxdb
-      #   env:
-      #     GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: Destroy influx
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
+        run: TF_VAR_gcp_project=empiris terraform destroy -auto-approve
+        working-directory: ./infra/victoriametrics
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
