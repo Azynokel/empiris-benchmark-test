@@ -4,9 +4,11 @@ Welcome to EMPIRIS, a comprehensive benchmarking Github action designed to evalu
 
 ## Features
 
-- Application & Microbenchmark Support: We support tsbs, inch and go microbenchmarks
-- Designed to be extended
+- Continuous Application Benchmarks with inch and tsbs
+- Continuous Micro Benchmarks with Go and randomized multiple interleaved trials (RMIT)
 - Run Benchmarks in your Cloud
+- Designed to be extended
+- Visualization and Analysis via [empiris.pages.dev](https://empiris.pages,dev) but also open for your own analysis
 
 ## Get Started
 
@@ -37,8 +39,10 @@ jobs:
         with:
           go-version: "stable"
 
+      # {INSERT YOUR SYSTEM UNDER TEST PROVISIONING HERE}
+
       - name: Run Benchmark
-        uses: ./
+        uses: ADSP-EMPIRIS/benchmark-gh-action@main
         with:
           config_path: empiris.yaml
         env:

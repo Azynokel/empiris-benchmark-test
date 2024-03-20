@@ -2,20 +2,20 @@ name: Influx Benchmark
 application: influxdb
 
 benchmark:
-  tool: tsbs
-  database:
-    type: victoriametrics
-    user: admin
-    password: "{{ $env.influx_token }}"
-    host: "{{ $env.influx_host }}"
-    name: test
+  tool: inch
+  version: 2
+  influx_token: "{{ $env.influx_token }}"
+  host: "{{ $env.influx_host }}"
+  database: test
 
 # benchmark:
-#   tool: inch
-#   version: 2
-#   influx_token: "{{ $env.influx_token }}"
-#   host: "{{ $env.influx_host }}"
-#   database: test
+#   tool: tsbs
+#   database:
+#     type: victoriametrics
+#     user: admin
+#     password: "{{ $env.influx_token }}"
+#     host: "{{ $env.influx_host }}"
+#     name: test
 
 # benchmark:
 #   tool: artillery
