@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 5
       - uses: actions/setup-go@v4
 	  	with:
-        	go-version: "stable"
+		  go-version: "stable"
       - name: Run Benchmark
         uses: ./
         with:

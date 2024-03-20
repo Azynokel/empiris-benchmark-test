@@ -1,22 +1,23 @@
 import * as core from "@actions/core";
-import { createAdapter } from "../types";
+import { DataframeMetric, createAdapter } from "../types";
 import { z } from "zod";
 import { waitOn } from "../utils";
+
+function parseTsbsOutput(_output: string): DataframeMetric[] {
+  // Get mean rate metrics/second
+  return [];
+}
 
 /**
  * This is the adapter for the TSBS benchmarking tool. Works with many popular time series databases.
  */
 export const tsbsAdapter = createAdapter({
   tool: "tsbs",
-  dependsOn: ["go", "make"],
+  dependsOn: ["go"],
   // TODO: Union schema for all supported databases
   config: z.object({
     database: z.object({
-      type: z.union([
-        z.literal("influxdb"),
-        z.literal("victoriametrics"),
-        z.literal("timescaledb"),
-      ]),
+      type: z.literal("victoriametrics"),
       host: z.string(),
       password: z.string(),
       user: z.string(),
@@ -26,7 +27,7 @@ export const tsbsAdapter = createAdapter({
       .union([z.literal("cpu-only"), z.literal("devops"), z.literal("iot")])
       .default("cpu-only"),
     seed: z.number().default(123),
-    scale: z.number().default(100),
+    scale: z.number().default(1000),
     timestamp_start: z.string().default("2020-01-01T00:00:00Z"),
     timestamp_end: z.string().default("2020-01-01T00:00:00Z"),
     log_interval: z.string().optional().default("1s"),
@@ -83,7 +84,7 @@ export const tsbsAdapter = createAdapter({
     core.info("Running tsbs_load command");
 
     const result = await exec(
-      `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && cat data.gz | gunzip | tsbs_load_${type} --workers=${workers} --batch-size=${batch_size} --urls="${host}/write"`
+      `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && cat data.gz | gunzip | tsbs_load_${type} --workers=${workers} --batch-size=${batch_size} --urls="${host}/writ"`
     );
 
     if (!result.success) {
@@ -94,7 +95,7 @@ export const tsbsAdapter = createAdapter({
     // Parse the result and return the metrics
     core.info("" + result.stdout);
 
-    return [];
+    return parseTsbsOutput(result.stdout);
   },
 });
 
