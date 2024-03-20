@@ -5,6 +5,7 @@ benchmark:
   tool: go
   workdir: examples/go
   package: fib
+  optimization: true
 
 # platform:
 #   on: gcp-vm
