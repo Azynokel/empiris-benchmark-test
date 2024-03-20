@@ -1,4 +1,4 @@
-# EMPIRIS: Benchmarking GitHub Action
+# EMPIRIS: Continuous Benchmarking GitHub Action
 
 Welcome to EMPIRIS, a comprehensive benchmarking Github action designed to evaluate the performance and efficiency of systems across an increasing range of qualities. EMPIRIS aims to equip developers, researchers, and organizations with the insights needed to optimize their solutions for better performance and scalability.
 
@@ -15,6 +15,36 @@ This section will guide you through the process of setting up EMPIRIS for use in
 ### SUT
 
 We assume that the SUT is provisioned as part of a CI/CD pipeline using the user's favorable infrastructure provisioning like Terraform. We don't impose any abstractions, such that the SUT can be set up as a simple docker container or a Kubernetes Cluster. Depending on the benchmarking client we just assume that the SUT can be reached.
+
+### Action Setup
+
+```yaml
+name: Minimal setup
+on:
+  push:
+
+jobs:
+  benchmark:
+    name: Performance regression check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
+        with:
+          fetch-depth: 5
+      - uses: actions/setup-go@v4
+	  	with:
+        	go-version: "stable"
+      - name: Run Benchmark
+        uses: ./
+        with:
+          config_path: empiris.yaml
+        env:
+          api_key: ${{ secrets.EMPIRIS_API_KEY }}
+          service_account: ${{ secrets.GOOGLE_CREDENTIALS }}
+          ssh_private_key: ${{ secrets.CLOUD_SSH_PRIVATE_KEY }}
+          ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
+```
 
 ### Configuration File Breakdown
 
@@ -74,7 +104,7 @@ application: influxdb
 
 benchmark:
   tool: inch
-  # Settings like benchmark duration etc. fall back to reasonable defaults here
+  # Settings like benchmark duration etc. fall back to reasonable defaults here but could also be specified
   version: 2
   influx_token: "{{ $env.influx_token }}"
   host: "{{ $env.influx_host }}"
@@ -95,9 +125,18 @@ visualization:
   api_key: "{{ $env.api_key }}"
 ```
 
-## Run the Examples
+### Visualization
+
+The metrics obtained from a benchmark experiment can stored and visualized via our service `empiris.pages.dev`,
+however, this is optional and we also write the results under `report.json`. You can bring your own analysis and visualization based on the `report.json`.
+
+### Complete Example
+
+Under `.github/workflows/test.yml` you can find a complete working example including SUT provisioning. You can take this as a starting point for your own setup.
 
 ## Known Issues
+
+- The TSBS Adapter can currently run in a cloud environment and only victoriametrics. In the GitHub action's VM we experience unexpected behavior that requires further analysis.
 
 ## Future Work
 
@@ -131,7 +170,7 @@ pnpm build --watch
 
 Depending on the example you want to run you should also have a .env secret file.
 
-For local testing, you can use act.
+For local testing, you can use [act](https://github.com/nektos/act).
 
 ```sh
 act push --secret-file .env
