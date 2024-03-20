@@ -20,13 +20,13 @@ jobs:
       #   run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
 
       - run: terraform init
-        working-directory: ./infra/victoriametrics
+        working-directory: ./infra/influxdb
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Start influx
         id: start-influx
-        working-directory: ./infra/victoriametrics
+        working-directory: ./infra/influxdb
         run: |
           TF_VAR_gcp_project=empiris terraform apply -auto-approve
           ip_address=$(terraform output -raw ip)
@@ -61,6 +61,6 @@ jobs:
         # Make sure infrastructure is destroyed even in case of previous failures
         if: always()
         run: TF_VAR_gcp_project=empiris terraform destroy -auto-approve
-        working-directory: ./infra/victoriametrics
+        working-directory: ./infra/influxdb
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}

@@ -34,8 +34,8 @@ jobs:
           fetch-depth: 5
 
       - uses: actions/setup-go@v4
-	    with:
-		  go-version: "stable"
+        with:
+          go-version: "stable"
 
       - name: Run Benchmark
         uses: ./
@@ -86,9 +86,9 @@ platform:
   project: empiris
   instance:
     machine_type: n2-highcpu-4
-	copy:
-	  - local: examples/go
-		remote: examples/go
+    copy:
+      - local: examples/go
+        remote: examples/go
   auth:
     service_account: "{{ $env.service_account }}"
     ssh:
