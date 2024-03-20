@@ -26,7 +26,7 @@ resource "google_compute_address" "tf-ip" {
 
 # Setup compute instance in GCP
 resource "google_compute_instance" "tf-instance" {
-  name = "influx-instance"
+  name = "victoriametrics-instance"
   # machine_type = "e2-medium"
   machine_type = "n2-highcpu-4"
   zone         = var.gcp_zone

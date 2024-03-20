@@ -3,8 +3,28 @@ import { DataframeMetric, createAdapter } from "../types";
 import { z } from "zod";
 import { waitOn } from "../utils";
 
-function parseTsbsOutput(_output: string): DataframeMetric[] {
-  // Get mean rate metrics/second
+function parseTsbsOutput(output: string): DataframeMetric[] {
+  // Define a regular expression to match the line with mean metrics/sec
+  const regex =
+    /loaded \d+ metrics in \d+(\.\d+)?sec with \d+ workers \(mean rate (\d+(\.\d+)?) metrics\/sec\)/;
+
+  // Execute the regex on the summary text
+  const match = output.match(regex);
+
+  // Check if we have a match
+  if (match && match[2]) {
+    // Parse the mean metrics/sec as a floating point number and return it
+    return [
+      {
+        type: "dataframe",
+        metric: "throughput",
+        specifier: "mean rate",
+        unit: "metrics/sec",
+        value: parseFloat(match[2]),
+      },
+    ];
+  }
+
   return [];
 }
 
@@ -27,12 +47,12 @@ export const tsbsAdapter = createAdapter({
       .union([z.literal("cpu-only"), z.literal("devops"), z.literal("iot")])
       .default("cpu-only"),
     seed: z.number().default(123),
-    scale: z.number().default(1000),
-    timestamp_start: z.string().default("2020-01-01T00:00:00Z"),
-    timestamp_end: z.string().default("2020-01-01T00:00:00Z"),
-    log_interval: z.string().optional().default("1s"),
+    scale: z.number().default(10),
+    timestamp_start: z.string().default("2016-01-01T00:00:00Z"),
+    timestamp_end: z.string().default("2016-01-02T00:00:00Z"),
+    log_interval: z.string().optional().default("10s"),
     workers: z.number().optional().default(1),
-    batch_size: z.number().optional().default(10),
+    batch_size: z.number().optional().default(5),
   }),
   setup: async ({
     exec,
@@ -43,9 +63,6 @@ export const tsbsAdapter = createAdapter({
     const commands = [
       `go install github.com/timescale/tsbs/cmd/tsbs_load_${type}@latest`,
       "go install github.com/timescale/tsbs/cmd/tsbs_generate_data@latest",
-      //   "git clone https://github.com/timescale/tsbs.git",
-      //   "cd tsbs",
-      //   "make",
     ];
 
     for (const command of commands) {
@@ -69,31 +86,34 @@ export const tsbsAdapter = createAdapter({
       scale,
       batch_size,
       workers,
+      use_case,
+      timestamp_start,
+      timestamp_end,
+      log_interval,
     },
   }) => {
     core.info(`Waiting for ${type} to be ready at ${host}`);
     // This only works for victoriametrics so far
     await waitOn({
       ressources: [`${host}/api/v1/status/tsdb`],
+      // Timeout after 5 minutes
+      timeout: 1000 * 60 * 5,
     });
 
     await exec(
-      `tsbs_generate_data --use-case=cpu-only --seed=${seed} --scale=${scale} --timestamp-start="2016-01-01T00:00:00Z"  --timestamp-end="2016-01-02T00:00:00Z" --log-interval="10s" --format="victoriametrics" | gzip > data.gz`
+      `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && tsbs_generate_data --use-case=${use_case} --seed=${seed} --scale=${scale} --timestamp-start="${timestamp_start}"  --timestamp-end="${timestamp_end}" --log-interval="${log_interval}" --format="${type}" | gzip > data.gz`
     );
 
     core.info("Running tsbs_load command");
 
     const result = await exec(
-      `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && cat data.gz | gunzip | tsbs_load_${type} --workers=${workers} --batch-size=${batch_size} --urls="${host}/writ"`
+      `export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin && cat data.gz | gunzip | tsbs_load_${type} --workers=${workers} --batch-size=${batch_size} --urls="${host}/write"`
     );
 
     if (!result.success) {
       core.error("Failed to run tsbs: " + result.stderr);
       return [];
     }
-
-    // Parse the result and return the metrics
-    core.info("" + result.stdout);
 
     return parseTsbsOutput(result.stdout);
   },

@@ -32,9 +32,11 @@ jobs:
         # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
         with:
           fetch-depth: 5
+
       - uses: actions/setup-go@v4
 	    with:
 		  go-version: "stable"
+
       - name: Run Benchmark
         uses: ./
         with:
@@ -48,7 +50,7 @@ jobs:
 
 ### Configuration File Breakdown
 
-The configuration is YAML-formatted, which is human-readable and widely used for configuration files.
+The `empiris.yaml` configuration is used to further specify the benchmark.
 It utilizes placeholders (e.g., {{ $env.variable_name }}) for sensitive or environment-specific values.
 
 **Go Microbenchmarks in its simplest form:**
@@ -84,6 +86,9 @@ platform:
   project: empiris
   instance:
     machine_type: n2-highcpu-4
+	copy:
+	  - local: examples/go
+		remote: examples/go
   auth:
     service_account: "{{ $env.service_account }}"
     ssh:
@@ -136,15 +141,7 @@ Under `.github/workflows/test.yml` you can find a complete working example inclu
 
 ## Known Issues
 
-- The TSBS Adapter can currently run in a cloud environment and only victoriametrics. In the GitHub action's VM we experience unexpected behavior that requires further analysis.
-
-## Future Work
-
-- More Adapters like Artillery (currently wip)
-- VPC Peering
-- Scalable and Distributed Benchmarking Clients
-- Duet Benchmark
-- Optimizations for Cloud Ressource Provisioning
+- The TSBS Adapter can currently only run in a cloud environment with victoriametrics. In the GitHub action's VM we experience unexpected behavior that requires further analysis.
 
 ## Development
 
@@ -168,7 +165,7 @@ In watch mode:
 pnpm build --watch
 ```
 
-Depending on the example you want to run you should also have a .env secret file.
+Depending on the example you want to run you should also have a .env secret file with the accourning key-value pairs.
 
 For local testing, you can use [act](https://github.com/nektos/act).
 
@@ -178,7 +175,7 @@ act push --secret-file .env
 
 ### Bring your adapters
 
-This is the current work in progress of the artillery adapter and it shows quite well how an adapter is structured and developed. An adapter must have a unique name and a config schema for the empiris.yaml file. The adapter can optionally define dependencies and the EMPIRIS framework will ensure that those dependencies are available when the benchmark is setting up and running. Every adapter must implement a setup and a run method. It receives the options specified in the empiris.yaml, as well as an exec function. The exec function ensures compatibility across different platform runtimes, such that the adapters must not worry about cloud infrastructure etc.
+This is the current work in progress of the artillery adapter and it shows quite well how an adapter is structured and developed. An adapter must have a unique name and a config schema for the empiris.yaml file. The adapter can optionally define dependencies and the EMPIRIS framework will ensure that those dependencies are available when the benchmark is setting up and running. Every adapter must implement a setup and a run method. It receives the options specified in the empiris.yaml, as well as an exec function. The exec function ensures compatibility across different platform runtimes, such that the adapters must not worry about cloud infrastructure.
 
 ```typescript
 import * as core from "@actions/core";
@@ -212,7 +209,7 @@ export const artilleryAdapter = createAdapter({
       return [];
     }
 
-    // Parse the benchmarks output into metrics
+    // Parse the benchmarks output into metrics (needs to be implemented)
     core.info(result.stdout);
     // Return metrics
     return [];
@@ -221,3 +218,16 @@ export const artilleryAdapter = createAdapter({
 
 export type ArtilleryAdapter = typeof artilleryAdapter;
 ```
+
+## Next Steps
+
+- More Adapters like Artillery (currently wip)
+- Duet Benchmark
+- VPC Peering
+- Scalable and Distributed Benchmarking Clients
+- Optimizations for Cloud Ressource Provisioning
+
+## Related Work
+
+Some design decisions were inspired by [https://github.com/benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark). While the implementation differs significantly, you might see some
+similarities in the configuration specification.
