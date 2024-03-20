@@ -21,8 +21,8 @@ benchmark:
 #       private_key: "{{ $env.ssh_private_key }}"
 #       public_key: "{{ $env.ssh_public_key }}"
 
-platform:
-  on: local
+# platform:
+#   on: local
 
 visualization:
   api_key: "{{ $env.api_key }}"
