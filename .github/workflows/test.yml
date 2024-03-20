@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "stable"
-      # - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
       # Only for local windows testing necessary
       # - name: fix terraform file permissions
       #   run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
