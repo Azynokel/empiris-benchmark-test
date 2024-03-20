@@ -16,7 +16,7 @@ This section will guide you through the process of setting up EMPIRIS for use in
 
 ### SUT
 
-We assume that the SUT is provisioned as part of a CI/CD pipeline using the user's favorable infrastructure provisioning like Terraform. We don't impose any abstractions, such that the SUT can be set up as a simple docker container or a Kubernetes Cluster. Depending on the benchmarking client we just assume that the SUT can be reached.
+We assume that the SUT is provisioned as part of a CI/CD pipeline using your most favorable infrastructure provisioning. We don't impose any abstractions, such that the SUT can be set up as a simple docker container or a Kubernetes Cluster. Depending on the benchmarking client we just assume that the SUT can be reached.
 
 ### Action Setup
 
