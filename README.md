@@ -8,7 +8,7 @@ Welcome to EMPIRIS, a comprehensive benchmarking Github action designed to evalu
 - Continuous Micro Benchmarks with Go and randomized multiple interleaved trials (RMIT)
 - Run Benchmarks in your Cloud
 - Designed to be extended
-- Integrated visualization with [empiris.pages.dev](https://empiris.pages.dev) and analysis with our [analysis action](https://github.com/ADSP-EMPIRIS/analysis-action) but also open for your own implementations
+- Integrated visualization with [empiris.pages.dev](https://empiris.pages.dev) and analysis with our [analysis action](https://github.com/SWC-EMPIRIS/analysis-action) but also open for your own implementations
 
 ## Get Started
 
@@ -42,7 +42,7 @@ jobs:
       # {INSERT YOUR SYSTEM UNDER TEST PROVISIONING HERE}
 
       - name: Run Benchmark
-        uses: ADSP-EMPIRIS/benchmark-gh-action@main
+        uses: SWC-EMPIRIS/benchmark-gh-action@main
         with:
           config_path: empiris.yaml
         env:
@@ -143,7 +143,7 @@ however, this is optional and we also write the results under `report.json`. You
 
 ### Analysis
 
-Similarly to the visualization we provide our own implementation for an [analysis action](https://github.com/ADSP-EMPIRIS/analysis-action) or you can bring your own via the `report.json`.
+Similarly to the visualization we provide our own implementation for an [analysis action](https://github.com/SWC-EMPIRIS/analysis-action) or you can bring your own via the `report.json`.
 
 ### Complete Example
 

@@ -1,5 +1,5 @@
 name: "EMPIRIS Benchmark"
-author: "EMPIRIS developers <https://github.com/ADSP-EMPIRIS>"
+author: "EMPIRIS developers <https://github.com/SWC-EMPIRIS>"
 description: "The EMPIRIS benchmarking action"
 
 inputs:

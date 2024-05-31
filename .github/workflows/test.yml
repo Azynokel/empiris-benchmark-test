@@ -52,7 +52,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Run Analysis Script
-        uses: ADSP-EMPIRIS/analysis-action@main
+        uses: SWC-EMPIRIS/analysis-action@main
         with:
           supabase_url: ${{ secrets.SUPABASE_URL }}
           supabase_key: ${{ secrets.SUPABASE_KEY }}
