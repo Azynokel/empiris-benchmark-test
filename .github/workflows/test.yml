@@ -29,7 +29,7 @@ jobs:
         id: start-influx
         working-directory: ./infra/influxdb
         run: |
-          TF_VAR_gcp_project=empiris terraform apply -auto-approve
+          TF_VAR_gcp_project=swc-empiris terraform apply -auto-approve
           ip_address=$(terraform output -raw ip)
           echo $ip_address
           echo "IP_ADDRESS=$ip_address" >> "$GITHUB_OUTPUT"
@@ -58,18 +58,19 @@ jobs:
           repository: swc-empiris/analysis-action
           token: ${{ secrets.GH_TOKEN }}
 
-#      - name: Run Analysis Script
-#        uses: swc-empiris/analysis-action@main
-#        with:
-#          supabase_url: ${{ secrets.SUPABASE_URL }}
-#          supabase_key: ${{ secrets.SUPABASE_KEY }}
-#          threshold: 0.03
-#          api_key: ${{ secrets.UNKEY_API_ID }}
-#        env:
-#          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-#          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_KEY }}
-#          THRESHOLD: 0.03
-#          UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
+      - name: Run Analysis Script
+        uses: swc-empiris/analysis-action@main
+        with:
+          supabase_url: ${{ secrets.SUPABASE_URL }}
+          supabase_key: ${{ secrets.SUPABASE_KEY }}
+          threshold: 0.03
+          api_key: ${{ secrets.UNKEY_API_ID }}
+          token: ${{ secrets.GH_TOKEN }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_KEY }}
+          THRESHOLD: 0.03
+          UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
 
       - name: Destroy influx
         # Make sure infrastructure is destroyed even in case of previous failures
