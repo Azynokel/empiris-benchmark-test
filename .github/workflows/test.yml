@@ -52,8 +52,14 @@ jobs:
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      - name: Checkout private action repository
+        uses: actions/checkout@v2
+        with:
+          repository: swc-empiris/analysis-action
+          token: ${{ secrets.GH_TOKEN }}
+
       - name: Run Analysis Script
-        uses: SWC-EMPIRIS/analysis-action@main
+        uses: SWC-EMPIRIS/empiris-analysis-action@main
         with:
           supabase_url: ${{ secrets.SUPABASE_URL }}
           supabase_key: ${{ secrets.SUPABASE_KEY }}
