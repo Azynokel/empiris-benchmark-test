@@ -23,7 +23,7 @@ benchmark:
 
 platform:
   on: gcp-vm
-  project: empiris
+  project: swc-empiris
   instance:
     machine_type: n2-highcpu-4
   auth:
