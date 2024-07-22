@@ -55,11 +55,11 @@ jobs:
       - name: Checkout private action repository
         uses: actions/checkout@v4
         with:
-          repository: SWC-EMPIRIS/analysis-action
+          repository: swc-empiris/analysis-action
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Run Analysis Script
-        uses: SWC-EMPIRIS/analysis-action@main
+        uses: swc-empiris/analysis-action@main
         with:
           supabase_url: ${{ secrets.SUPABASE_URL }}
           supabase_key: ${{ secrets.SUPABASE_KEY }}
