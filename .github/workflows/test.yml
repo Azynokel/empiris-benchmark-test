@@ -1,6 +1,7 @@
 name: Example
 on:
   push:
+  # For testing on schedule https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onschedule
 
 jobs:
   benchmark:
