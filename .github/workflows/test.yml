@@ -58,20 +58,15 @@ jobs:
           repository: swc-empiris/analysis-action
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Use analysis action
-        run: |
-          echo "supabase_url=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "supabase_key=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
-          echo "threshold=0.03" >> $GITHUB_ENV
-          echo "api_key=${{ secrets.UNKEY_API_ID }}" >> $GITHUB_ENV
-
       - name: Run Analysis Script
-        run: |
-          supabase_url=${{ secrets.SUPABASE_URL }}
-          supabase_key=${{ secrets.SUPABASE_KEY }}
-          threshold=0.03
-          api_key=${{ secrets.UNKEY_API_ID }}
-        uses: SWC-EMPIRIS/analysis-action@main
+        uses: swc-empiris/analysis-action@main
+        with:
+          repository: swc-empiris/analysis-action
+          token: ${{ secrets.GH_TOKEN }}
+          supabase_url: ${{ secrets.SUPABASE_URL }}
+          supabase_key: ${{ secrets.SUPABASE_KEY }}
+          threshold: 0.03
+          api_key: ${{ secrets.UNKEY_API_ID }}
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_KEY }}
