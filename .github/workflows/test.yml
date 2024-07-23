@@ -7,7 +7,6 @@ jobs:
   benchmark:
     name: Run example
     runs-on: ubuntu-latest
-    uses:
     steps:
       - uses: actions/checkout@v4
         # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
