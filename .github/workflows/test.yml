@@ -52,6 +52,14 @@ jobs:
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      - name: Destroy influx
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
+        run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
+        working-directory: ./infra/influxdb
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
       - name: Checkout private action repository
         uses: actions/checkout@v4
         with:
@@ -73,16 +81,4 @@ jobs:
           THRESHOLD: 0.03
           UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
 
-      - name: Checkout private action repository
-        uses: actions/checkout@v4
-        with:
-          repository: swc-empiris/benchmark-gh-action
-          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Destroy influx
-        # Make sure infrastructure is destroyed even in case of previous failures
-        if: always()
-        run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
-        working-directory: ./infra/influxdb
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
