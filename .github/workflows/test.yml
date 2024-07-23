@@ -66,13 +66,12 @@ jobs:
           echo "api_key=${{ secrets.UNKEY_API_ID }}" >> $GITHUB_ENV
 
       - name: Run Analysis Script
-        uses: swc-empiris/analysis-action@main
-        with:
-          repository: swc-empiris/analysis-action
-          supabase_url: ${{ secrets.SUPABASE_URL }}
-          supabase_key: ${{ secrets.SUPABASE_KEY }}
-          threshold: 0.03
-          api_key: ${{ secrets.UNKEY_API_ID }}
+        run: |
+          supabase_url=${{ secrets.SUPABASE_URL }}
+          supabase_key=${{ secrets.SUPABASE_KEY }}
+          threshold=0.03
+          api_key=${{ secrets.UNKEY_API_ID }}
+        uses: SWC-EMPIRIS/analysis-action@main
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_KEY }}
