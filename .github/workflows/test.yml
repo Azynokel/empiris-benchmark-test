@@ -7,6 +7,7 @@ jobs:
   benchmark:
     name: Run example
     runs-on: ubuntu-latest
+    uses:
     steps:
       - uses: actions/checkout@v4
         # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
@@ -73,23 +74,16 @@ jobs:
           THRESHOLD: 0.03
           UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
 
-  terraform_destroy:
-    name: "Terraform Destroy"
-    if: always()
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./infra/influxdb
-    steps:
-      - name: Checkout
+      - name: Checkout private action repository
         uses: actions/checkout@v4
+        with:
+          repository: swc-empiris/benchmark-gh-action
+          token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Terraform Destroy
-        id: destroy
-        working-directory: ${{ github.event.inputs.resource }}
+      - name: Destroy influx
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
         run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
+        working-directory: ./infra/influxdb
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
