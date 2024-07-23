@@ -73,13 +73,9 @@ jobs:
           THRESHOLD: 0.03
           UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
 
-      - name: checkout benchmark-gh-action repo
-        uses: actions/checkout@v4
-
       - name: Destroy influx
         # Make sure infrastructure is destroyed even in case of previous failures
         if: always()
         run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
-        working-directory: ./infra/influxdb
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
