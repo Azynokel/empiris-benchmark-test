@@ -73,9 +73,23 @@ jobs:
           THRESHOLD: 0.03
           UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
 
-      - name: Destroy influx
-        # Make sure infrastructure is destroyed even in case of previous failures
-        if: always()
+  terraform_destroy:
+    name: "Terraform Destroy"
+    if: always()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infra/influxdb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Destroy
+        id: destroy
+        working-directory: ${{ github.event.inputs.resource }}
         run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
