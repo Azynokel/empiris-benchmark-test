@@ -60,17 +60,10 @@ jobs:
         env:
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
-      - name: Checkout private action repository
-        uses: actions/checkout@v4
-        with:
-          repository: swc-empiris/analysis-action
-          token: ${{ secrets.GH_TOKEN }}
-
       - name: Run Analysis Script
         uses: swc-empiris/analysis-action@main
         with:
           repository: swc-empiris/analysis-action
-          token: ${{ secrets.GH_TOKEN }}
           supabase_url: ${{ secrets.SUPABASE_URL }}
           supabase_key: ${{ secrets.SUPABASE_KEY }}
           threshold: 0.03
@@ -80,5 +73,3 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_KEY }}
           THRESHOLD: 0.03
           UNKEY_API_ID: ${{ secrets.UNKEY_API_ID }}
-
-
