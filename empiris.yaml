@@ -34,5 +34,5 @@ platform:
 
 visualization:
   api_key: "{{ $env.api_key }}"
-
+  api_base_url: "https://visualizer-3g9.pages.dev"
 github_token: "{{ $env.github_token }}"
