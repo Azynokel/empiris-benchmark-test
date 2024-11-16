@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Run } from "./config";
+import { API, Run } from "./config";
 
 export type DataframeMetric = {
   type: "dataframe";
@@ -23,6 +23,7 @@ export type BenchmarkMetadata = {
   ip?: string;
   runConfig?: Run;
   githubToken?: string;
+  api?: API;
 };
 
 export type ExecResult =
@@ -47,6 +48,7 @@ export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
   config: O;
   dependsOn?: ("go" | "node" | "make")[];
+
   setup: (options: {
     isLocal: boolean;
     exec: ExecFn;
@@ -61,12 +63,21 @@ export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
         error: string;
       }
   >;
+
   run: (options: {
     isLocal: boolean;
     exec: ExecFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<Metric[]>;
+
+  runDuet?: (options: {
+    isLocal: boolean;
+    exec: ExecFn;
+    options: z.infer<O>;
+    metadata: BenchmarkMetadata;
+  }) => Promise<Metric[]>;
+
   teardown?: (options: {
     isLocal: boolean;
     exec: ExecFn;

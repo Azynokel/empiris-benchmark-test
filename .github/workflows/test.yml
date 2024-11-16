@@ -1,7 +1,5 @@
 name: Example
-on:
-  push:
-  # For testing on schedule https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onschedule
+on: workflow_dispatch
 
 jobs:
   benchmark:
@@ -39,7 +37,7 @@ jobs:
       - name: Run inch
         uses: ./
         with:
-          config_path: empiris.yaml
+          config_path: empiris.yml
         env:
           GITHUB_WORKFLOW_ID: test.yml
           api_key: ${{ secrets.EMPIRIS_API_KEY }}

@@ -78,10 +78,24 @@ const platformSchema = z
       on: z.literal("local"),
     })
   )
+  .or(
+    z.object({
+      on: z.literal("custom-terraform"),
+      work_dir: z.string(),
+      variables: z.record(z.string()).optional().default({}),
+    })
+  )
   .optional()
   .default({ on: "local" });
 
 export type Run = z.infer<typeof platformSchema>;
+
+const apiSchema = z.object({
+  key: z.string().optional(),
+  base_url: z.string().optional().default("https://empiris.dev"),
+});
+
+export type API = z.infer<typeof apiSchema>;
 
 const configSchema = z.object({
   name: z.string(),
@@ -91,21 +105,23 @@ const configSchema = z.object({
   benchmark: z.union([
     adapters[0].config.extend({
       tool: z.literal(adapters[0].tool),
+      duet: z.boolean().optional().default(false),
     }),
     adapters[1].config.extend({
       tool: z.literal(adapters[1].tool),
+      duet: z.boolean().optional().default(false),
     }),
     ...adapters
       .slice(2)
-      .map((a) => a.config.extend({ tool: z.literal(a.tool) })),
+      .map((a) =>
+        a.config.extend({
+          tool: z.literal(a.tool),
+          duet: z.boolean().optional().default(false),
+        })
+      ),
   ]),
+  api: apiSchema.optional(),
   platform: platformSchema,
-  visualization: z
-    .object({
-      api_key: z.string().optional(),
-      api_base_url: z.string().optional().default("https://empiris.pages.dev"),
-    })
-    .optional(),
   github_token: z.string().optional(),
 });
 
@@ -121,6 +137,7 @@ export async function getConfig() {
   const parsedConfig = configSchema.safeParse(parse(configFile));
 
   if (!parsedConfig.success) {
+    console.error(parsedConfig.error);
     throw new Error(
       "Invalid config: " + JSON.stringify(parsedConfig.error, null, 2)
     );

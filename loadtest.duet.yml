@@ -1,0 +1,11 @@
+config:
+  target: nil
+  phases:
+    - duration: 10
+      arrivalRate: 1
+  plugins:
+    metrics-by-endpoint: {}
+scenarios:
+  - flow:
+      - get:
+          url: "/"

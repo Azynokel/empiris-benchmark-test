@@ -1,0 +1,38 @@
+name: Influx Benchmark
+application: influxdb
+
+benchmark:
+  tool: inch
+  version: 2
+  influx_token: "{{ $env.influx_token }}"
+  host: "{{ $env.influx_host }}"
+  database: test
+
+# benchmark:
+#   tool: tsbs
+#   database:
+#     type: victoriametrics
+#     user: admin
+#     password: "{{ $env.influx_token }}"
+#     host: "{{ $env.influx_host }}"
+#     name: test
+
+# benchmark:
+#   tool: artillery
+#   configPath: ./loadtest.yml
+
+platform:
+  on: gcp-vm
+  project: swc-empiris
+  instance:
+    machine_type: n2-highcpu-4
+  auth:
+    service_account: "{{ $env.service_account }}"
+    ssh:
+      private_key: "{{ $env.ssh_private_key }}"
+      public_key: "{{ $env.ssh_public_key }}"
+
+api:
+  key: "{{ $env.api_key }}"
+
+github_token: "{{ $env.github_token }}"

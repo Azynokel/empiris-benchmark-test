@@ -1,0 +1,20 @@
+name: Duet with Artillery
+on: workflow_dispatch
+
+jobs:
+  benchmark:
+    name: Run Duet Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
+        with:
+          fetch-depth: 5
+
+      - name: Run Duet Benchmark
+        uses: ./
+        with:
+          config_path: empiris-duet.yml
+        env:
+          host_1: http://asciiart.artillery.io:8080/dino
+          host_2: http://asciiart.artillery.io:8080/pony

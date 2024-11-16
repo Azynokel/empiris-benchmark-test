@@ -83,6 +83,6 @@ export function toMs(time: string) {
   }, 0);
 }
 
-export function isExecSuccess(code: number) {
+export function isExecSuccess(code?: number) {
   return code === 0;
 }

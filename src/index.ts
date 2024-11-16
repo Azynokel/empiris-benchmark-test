@@ -141,7 +141,7 @@ async function main() {
     benchmark: { tool, ...rest },
     platform,
     github_token,
-    visualization,
+    api,
   } = await getConfig();
 
   // Get the adapter
@@ -180,6 +180,7 @@ async function main() {
     ...metadata,
     runConfig: platform,
     githubToken: github_token,
+    api,
   };
 
   let metrics: Metric[] = [];
@@ -228,12 +229,27 @@ async function main() {
 
       // Run the Benchmark
       // We assume here that the SUT is already running and available, we don't do the setup here
-      metrics = await adapter.run({
-        isLocal: false,
-        options: rest,
-        metadata,
-        exec: remoteExec,
-      });
+      if ("duet" in rest && typeof rest.duet === "boolean" && rest.duet) {
+        if (adapter.runDuet) {
+          metrics = await adapter.runDuet({
+            isLocal: false,
+            options: rest,
+            metadata,
+            exec: remoteExec,
+          });
+        } else {
+          throw new Error(
+            `Adapter ${adapter.tool} does not support duet benchmarking`
+          );
+        }
+      } else {
+        metrics = await adapter.run({
+          isLocal: false,
+          options: rest,
+          metadata,
+          exec: remoteExec,
+        });
+      }
 
       // Teardown the Benchmark Client
       await adapter.teardown?.({
@@ -256,12 +272,27 @@ async function main() {
 
       // Run the Benchmark
       // We assume here that the SUT is already running and available, we don't do the setup here
-      metrics = await adapter.run({
-        isLocal: true,
-        options: rest,
-        metadata,
-        exec: localExec,
-      });
+      if ("duet" in rest && typeof rest.duet === "boolean" && rest.duet) {
+        if (adapter.runDuet) {
+          metrics = await adapter.runDuet({
+            isLocal: true,
+            options: rest,
+            metadata,
+            exec: localExec,
+          });
+        } else {
+          throw new Error(
+            `Adapter ${adapter.tool} does not support duet benchmarking`
+          );
+        }
+      } else {
+        metrics = await adapter.run({
+          isLocal: true,
+          options: rest,
+          metadata,
+          exec: localExec,
+        });
+      }
 
       // Teardown the Benchmark Client
       await adapter.teardown?.({
@@ -307,11 +338,11 @@ async function main() {
     // For local analysis
     await writeFile("report.json", report);
 
-    if (visualization?.api_key) {
-      const { api_base_url, api_key } = visualization;
+    if (api?.key) {
+      const { base_url, key } = api;
       const id = await createExperimentRun({
-        apiKey: api_key,
-        basePath: api_base_url,
+        apiKey: key,
+        basePath: base_url,
         metadata: {
           name,
           description,
@@ -326,14 +357,12 @@ async function main() {
 
       // Write the results to the Empiris API
       await writeMetrics(metrics, {
-        basePath: api_base_url,
+        basePath: base_url,
         experimentRunId: id,
-        apiKey: api_key,
+        apiKey: key,
       });
 
-      console.log(
-        `You can view the results at ${api_base_url}/experiments/${id}`
-      );
+      console.log(`You can view the results at ${base_url}/experiments/${id}`);
     } else {
       core.info("No API key provided, skipping writing results to api");
     }

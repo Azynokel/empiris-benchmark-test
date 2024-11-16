@@ -3,9 +3,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext", "dom"],
     "preserveConstEnums": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -19,16 +17,9 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": [
-      "node",
-      "jest"
-    ]
+    "types": ["node", "jest"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

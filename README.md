@@ -155,29 +155,9 @@ Under `.github/workflows/test.yml` you can find a complete working example inclu
 
 ## Development
 
-To get started with developing we assume you have the latest version of NodeJS installed.
-
-Enable pnpm:
-
-```sh
-corepack enable
-```
-
-Build the action:
-
-```sh
-pnpm build
-```
-
-In watch mode:
-
-```sh
-pnpm build --watch
-```
+To get started with developing we assume you have the latest version of [act](https://github.com/nektos/act) installed.
 
 Depending on the example you want to run you should also have a .env secret file, you can start from the `env.example`.
-
-For local testing, you can use [act](https://github.com/nektos/act).
 
 ```sh
 act push --secret-file .env

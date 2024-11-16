@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ncc build src/index.ts"
+    "build": "bun build src/index.ts --target bun --outdir dist"
   },
   "keywords": [],
   "author": "Sebastian Koch",
@@ -16,7 +16,6 @@
     "@actions/github": "^6.0.0",
     "@actions/http-client": "^2.2.0",
     "@google-cloud/compute": "^4.0.1",
-    "execa": "^8.0.1",
     "google-auth-library": "^9.4.1",
     "google-gax": "^4.0.5",
     "handlebars": "^4.7.8",
@@ -34,5 +33,6 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.3.2"
-  }
+  },
+  "packageManager": "pnpm@9.9.0"
 }

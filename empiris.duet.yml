@@ -1,0 +1,14 @@
+name: Application Duet Benchmark
+application: duet-app
+
+api:
+  key: "{{ $env.api_key }}"
+
+benchmark:
+  tool: artillery
+  duet: true
+  hosts:
+    - url: "{{ $env.host_1 }}"
+    - url: "{{ $env.host_2 }}"
+
+  config_path: ./loadtest.duet.yml
