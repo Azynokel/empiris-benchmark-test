@@ -14,7 +14,7 @@ jobs:
       - name: Run Duet Benchmark
         uses: ./
         with:
-          config_path: empiris-duet.yml
+          config_path: empiris.duet.yml
         env:
           host_1: http://asciiart.artillery.io:8080/dino
           host_2: http://asciiart.artillery.io:8080/pony
