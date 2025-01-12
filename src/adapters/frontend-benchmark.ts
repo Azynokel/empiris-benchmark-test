@@ -71,12 +71,19 @@ async function preparePage(page: Page) {
 
 function isPageLoaded(page: Page) {
   return page.evaluate(() => {
-    // @ts-ignore
-    return window.largestContentfulPaint !== 0 && window.firstContentfulPaint !== 0;
+    return (
+      // @ts-ignore
+      window.largestContentfulPaint !== 0 && window.firstContentfulPaint !== 0
+    );
   });
 }
 
-async function collectWebVitals(page: Page, iterations: number, goTo: string) {
+async function collectWebVitals(
+  page: Page,
+  iterations: number,
+  goTo: string,
+  elementSelector?: string
+) {
   const values: { metric: string; value: number }[] = [];
 
   for (let i = 0; i < iterations; i++) {
@@ -84,6 +91,24 @@ async function collectWebVitals(page: Page, iterations: number, goTo: string) {
       waitUntil: "load",
       timeout: 10000,
     });
+
+    if (elementSelector) {
+      // Wait for the button to be available
+      await page.waitForSelector(elementSelector, {
+        visible: true,
+        timeout: 10000,
+      });
+
+      const button = await page.$(elementSelector);
+      if (button) {
+        await button.click();
+        core.info(`Clicked ${elementSelector}`);
+      } else {
+        core.error(
+          `Element with selector ${elementSelector} not found or not clickable.`
+        );
+      }
+    }
 
     // We wait until LCP & FCP are available
     while (!(await isPageLoaded(page))) {
@@ -209,22 +234,28 @@ async function collectWebVitals(page: Page, iterations: number, goTo: string) {
 
 async function getMetricsFromManagedChrome(host1: string, host2: string) {
   try {
-    core.debug(`Fetching metrics from Empiris-managed Chrome for hosts ${host1} and ${host2}`);
-    const response = await fetch(`${MANAGED_CHROME_API_URL}?url1=${host1}&url2=${host2}`, {
-      method: "GET",
-      headers: {
-        Authorization: process.env.MANAGED_CHROME_API_KEY || "0f492474c8215950473eb0e58dd5a55e9d089103cf48aff971193923ce047eea070a448fc48c758af36c7384779f64a977fe80399250f57d11b27afe078c7d78",
-      },
-    });
+    core.debug(
+      `Fetching metrics from Empiris-managed Chrome for hosts ${host1} and ${host2}`
+    );
+    const response = await fetch(
+      `${MANAGED_CHROME_API_URL}?url1=${host1}&url2=${host2}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization:
+            process.env.MANAGED_CHROME_API_KEY || "",
+        },
+      }
+    );
     core.debug(`Response status: ${response.status}`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch metrics: ${response.statusText}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       metrics: DataframeMetric[];
-    }
+    };
 
     return data.metrics;
   } catch (e) {
@@ -237,10 +268,12 @@ async function runPuppeteerBenchmark({
   host,
   iterations,
   chrome_mode: chromeMode,
+  clickableElementSelector,
 }: {
   host: string;
   iterations: number;
   chrome_mode: "local" | "empiris-managed";
+  clickableElementSelector?: string;
 }): Promise<Metric[]> {
   // Wait for dependencies to be ready
   await waitOn({
@@ -258,7 +291,7 @@ async function runPuppeteerBenchmark({
   const page = await browser.newPage();
   await preparePage(page);
 
-  const metrics = await collectWebVitals(page, iterations, host);
+  const metrics = await collectWebVitals(page, iterations, host, clickableElementSelector);
 
   await browser.close();
 
@@ -269,11 +302,13 @@ async function runPuppeteerBenchmark({
 async function runPuppeteerBenchmarkDuet({
   hosts,
   iterations,
-  chrome_mode
+  chrome_mode,
+  clickableElementSelector,
 }: {
   hosts: string[];
   iterations: number;
   chrome_mode: "local" | "empiris-managed";
+  clickableElementSelector?: string;
 }): Promise<DataframeMetric[]> {
   if (hosts.length !== 2) {
     throw new Error("Duet mode requires exactly two hosts");
@@ -281,7 +316,9 @@ async function runPuppeteerBenchmarkDuet({
 
   if (chrome_mode === "empiris-managed") {
     core.info(
-      `Running Puppeteer benchmark in duet mode against hosts ${hosts.join(", ")} using empiris-managed Chrome`
+      `Running Puppeteer benchmark in duet mode against hosts ${hosts.join(
+        ", "
+      )} using empiris-managed Chrome`
     );
     return await getMetricsFromManagedChrome(hosts[0], hosts[1]);
   }
@@ -303,7 +340,7 @@ async function runPuppeteerBenchmarkDuet({
   await Promise.all(pages.map((page) => preparePage(page)));
 
   const metrics = await Promise.all(
-    pages.map((page, i) => collectWebVitals(page, iterations, hosts[i]))
+    pages.map((page, i) => collectWebVitals(page, iterations, hosts[i], clickableElementSelector))
   );
 
   await browser.close();
@@ -326,7 +363,7 @@ async function runPuppeteerBenchmarkDuet({
     diffedMetrics.push({
       type: "dataframe",
       metric: `${metric1.metric}`,
-      specifier: `Difference Median ${metric1.specifier}`,
+      specifier: `Median Difference ${metric1.specifier}`,
       value: Math.round(diff * 100) / 100,
       unit: metric1.unit,
     });
@@ -344,7 +381,8 @@ export const puppeteerAdapter = createAdapter({
   config: z.object({
     host: z.string().optional(),
     hosts: z.array(z.object({ url: z.string() })).optional(),
-    iterations: z.number().optional().default(1),
+    iterations: z.number().optional().default(10),
+    click_element: z.string().optional(),
     chrome_mode: z
       .enum(["local", "empiris-managed"])
       .default("empiris-managed"),
@@ -362,6 +400,7 @@ export const puppeteerAdapter = createAdapter({
       host: options.host as string,
       iterations: options.iterations,
       chrome_mode: options.chrome_mode,
+      clickableElementSelector: options.click_element
     });
   },
   async runDuet({ options }) {
@@ -373,12 +412,13 @@ export const puppeteerAdapter = createAdapter({
       hosts: options.hosts.map((h) => h.url),
       iterations: options.iterations,
       chrome_mode: options.chrome_mode,
+      clickableElementSelector: options.click_element
     });
 
     return {
       metrics: m,
-      samples: []
-    }
+      samples: [],
+    };
   },
 });
 

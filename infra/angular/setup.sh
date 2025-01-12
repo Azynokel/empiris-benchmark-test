@@ -57,7 +57,7 @@ apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 status "Installed Docker and plugins, cloning sut"
 
 cd /root/
-REPO_URL="https://github.com/SWC-EMPIRIS/angular-benchmark.git"
+REPO_URL="https://github.com/SWC-EMPIRIS/angular-app.git"
 BRANCH="main"
 
 git clone --depth 1 --branch $BRANCH $REPO_URL new

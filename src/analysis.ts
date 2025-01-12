@@ -22,11 +22,9 @@ stat, p
 
   const result = p.toJs() as [number, number];
 
-  // TODO: Next we check with Bootrapping method
-
   return {
     stat: result[0],
-    p: result[1],
+    p: result[1].toFixed(5),
     significant: result[1] < 0.05,
   };
 }
