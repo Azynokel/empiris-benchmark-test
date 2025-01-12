@@ -4,6 +4,9 @@ application: spring-app
 api:
   key: "{{ $env.api_key }}"
 
+analysis:
+  enabled: true
+
 benchmark:
   tool: http
   duet: true

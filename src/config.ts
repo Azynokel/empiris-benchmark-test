@@ -97,10 +97,15 @@ const apiSchema = z.object({
 
 export type API = z.infer<typeof apiSchema>;
 
+const analysisSchema = z.object({
+  enabled: z.boolean().optional().default(true),
+});
+
 const configSchema = z.object({
   name: z.string(),
   application: z.string(),
   description: z.string().optional(),
+  analysis: analysisSchema.optional().default({ enabled: false }),
 
   benchmark: z.union([
     adapters[0].config.extend({

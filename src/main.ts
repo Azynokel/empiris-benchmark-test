@@ -181,6 +181,7 @@ export async function main(config?: string) {
     platform,
     github_token,
     api,
+    analysis,
   } = await getConfig(config);
 
   // Get the adapter
@@ -405,7 +406,7 @@ export async function main(config?: string) {
     2
   );
 
-  if (duetResult) {
+  if (duetResult && analysis.enabled) {
     for (const sample of duetResult.samples) {
       const { old, latest } = sample;
       const { p, significant, stat } = await wilcoxonTest(old.values, latest.values);
