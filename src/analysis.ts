@@ -64,7 +64,7 @@ def is_performance_change_with_confidence_interval(old_wall_time: pd.Series, new
 is_performance_change_with_confidence_interval(pd.Series(sample1), pd.Series(sample2))
 `, { globals });
 
-  const [significant, ci_lower, ci_upper, ci_mean] = p.toJs() as [boolean, number, number, number];
+  const [[significant], ci_lower, ci_upper, ci_mean] = p.toJs() as [[boolean], number, number, number];
 
   return {
     significant,
