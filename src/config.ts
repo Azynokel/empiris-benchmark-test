@@ -136,7 +136,7 @@ export async function getConfig(config?: string): Promise<Config> {
   const parsedConfig = configSchema.safeParse(parse(configFile));
 
   if (!parsedConfig.success) {
-    console.error(parsedConfig.error);
+    core.error(`Invalid config: ${JSON.stringify(parsedConfig.error, null, 2)}`);
     throw new Error(
       "Invalid config: " + JSON.stringify(parsedConfig.error, null, 2)
     );
