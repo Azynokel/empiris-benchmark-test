@@ -43,9 +43,9 @@ jobs:
           host_2: http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8090 
 
       - name: Destroy infra
-       # Make sure infrastructure is destroyed even in case of previous failures
-       if: always()
-       run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
-       working-directory: ./infra/spring
-       env:
-         GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
+        run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
+        working-directory: ./infra/spring
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
