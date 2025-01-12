@@ -24,7 +24,7 @@ stat, p
 
   return {
     stat: result[0],
-    p: result[1].toFixed(5),
+    p: Number(result[1].toFixed(5)),
     significant: result[1] < 0.05,
   };
 }
