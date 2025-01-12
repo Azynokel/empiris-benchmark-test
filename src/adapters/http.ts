@@ -1,5 +1,7 @@
+import * as core from "@actions/core";
 import { DataframeMetric, TimeSeriesMetric, createAdapter } from "../types";
 import { runLoadTest, testConfigSchema } from "../load-generator/load-generator";
+import { waitOn } from "../utils";
 
 /**
  * This is the adapter for general http-based load testing. It is built upon k6.
@@ -15,6 +17,14 @@ export const httpAdapter = createAdapter({
     if (!target) {
       throw new Error("No target provided");
     }
+
+    core.info(`Waiting for SUT to be ready: ${target.url}`);
+
+    await waitOn({
+      // Wait for up to 3 minutes for the target to be ready
+      timeout: 180000,
+      ressources: [target.url],
+    });
 
     const stats = await runLoadTest({
       target,
@@ -43,6 +53,14 @@ export const httpAdapter = createAdapter({
     if (!targets) {
       throw new Error("Targets not provided for duet comparison");
     }
+
+    core.info(`Waiting for SUTs to be ready: ${targets.latest.url}, ${targets.old.url}`);
+
+    await waitOn({
+      // Wait for up to 3 minutes for the targets to be ready
+      timeout: 180000,
+      ressources: [targets.latest.url, targets.old.url],
+    });
 
     const stats = await runLoadTest({
       targets,
