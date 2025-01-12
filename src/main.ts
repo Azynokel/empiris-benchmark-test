@@ -412,8 +412,6 @@ export async function main(config?: string) {
       const { p, significant, stat } = await wilcoxonTest(old.values, latest.values);
       const { significant: bootrapSignificant, ci_lower, ci_mean, ci_upper } = await bootrapping(old.values, latest.values);
 
-      console.log(p);
-
       metrics.push({
         type: "dataframe",
         metric: "wilcoxon_signed_rank_test",
@@ -425,14 +423,12 @@ export async function main(config?: string) {
       if (api?.key && experimentRunId) {
         const { base_url, key } = api;
 
-        core.info("Updating significant change data..");
-
         await patchExperimentRunData({
           basePath: base_url,
           apiKey: key,
           experimentRunId,
           metadata: {
-            "Performance Change": significant,
+            "Performance Change": significant && bootrapSignificant
           },
         });
 
@@ -445,7 +441,7 @@ export async function main(config?: string) {
             bootstrap_ci_low: ci_lower,
             bootstrap_mean: ci_mean,
             metric: old.metric,
-            performance_change: significant,
+            performance_change: significant && bootrapSignificant,
             wilcoxon_p: p,
             wilcoxon_stat: stat,
           },
