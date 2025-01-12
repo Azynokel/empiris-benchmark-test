@@ -1,5 +1,6 @@
 name: Duet with Artillery
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
 
 jobs:
   benchmark:

@@ -111,14 +111,12 @@ const configSchema = z.object({
       tool: z.literal(adapters[1].tool),
       duet: z.boolean().optional().default(false),
     }),
-    ...adapters
-      .slice(2)
-      .map((a) =>
-        a.config.extend({
-          tool: z.literal(a.tool),
-          duet: z.boolean().optional().default(false),
-        })
-      ),
+    ...adapters.slice(2).map((a) =>
+      a.config.extend({
+        tool: z.literal(a.tool),
+        duet: z.boolean().optional().default(false),
+      })
+    ),
   ]),
   api: apiSchema.optional(),
   platform: platformSchema,
@@ -127,8 +125,9 @@ const configSchema = z.object({
 
 export type Config = z.infer<typeof configSchema>;
 
-export async function getConfig() {
-  const configPath = core.getInput("config_path");
+export async function getConfig(config?: string): Promise<Config> {
+  const configPath = config || core.getInput("config_path") || "";
+  core.info(`Reading config from ${configPath}`);
   const configFile = await readFile(
     path.join(process.cwd(), configPath === "" ? "empiris.yml" : configPath),
     "utf8"

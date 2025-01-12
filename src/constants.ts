@@ -1,0 +1,1 @@
+export const MANAGED_CHROME_API_URL= "https://browser-worker.lucidai.workers.dev"

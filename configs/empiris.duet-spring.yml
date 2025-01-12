@@ -1,0 +1,31 @@
+name: Application Duet Spring Benchmark
+application: spring-app
+
+api:
+  # base_url: http://host.docker.internal:3000
+  key: "{{ $env.api_key }}"
+
+benchmark:
+  tool: http
+  duet: true
+  targets:
+    old: 
+      url: "{{ $env.host_1 }}"
+      default_query_params:
+        iterations: 100
+    latest:
+      url: "{{ $env.host_2 }}"
+      default_query_params:
+        iterations: 100
+  phases:
+    - duration: 60
+      arrival_rate: 50
+      concurrency: 5
+  scenarios:
+    - name: duet-spring
+      requests:
+        - method: GET
+          url: /api/benchmark/run
+    
+  
+

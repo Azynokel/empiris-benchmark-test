@@ -1,0 +1,51 @@
+name: Duet Spring
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Duet Benchmaking for Spring
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # https://stackoverflow.com/questions/60052236/git-diff-gives-me-a-fatal-bad-revision-head1
+        with:
+          fetch-depth: 5
+
+      - uses: hashicorp/setup-terraform@v3
+
+      # Only for local windows testing necessary
+      # - name: fix terraform file permissions
+      #   run: find /tmp -name "terraform" -type f -exec chmod 755 {} +
+
+      - run: terraform init
+        working-directory: ./infra/spring
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Start Spring
+        id: start-spring
+        working-directory: ./infra/spring
+        run: |
+          TF_VAR_gcp_project=swc-empiris terraform apply -auto-approve
+          ip_address=$(terraform output | grep -oE "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+")
+          echo "IP_ADDRESS=$ip_address" >> $GITHUB_ENV
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Run Spring
+        uses: ./
+        with:
+          config_path: configs/empiris.duet-spring.yml
+        env:
+          api_key: ${{ secrets.EMPIRIS_API_KEY }}
+          host_1: http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8080
+          host_2: http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8090 
+
+      - name: Destroy infra
+       # Make sure infrastructure is destroyed even in case of previous failures
+       if: always()
+       run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
+       working-directory: ./infra/spring
+       env:
+         GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}

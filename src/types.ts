@@ -1,17 +1,25 @@
 import { z } from "zod";
 import { API, Run } from "./config";
 
+type DataframeBaseMetricType = "latency" | "throughput" | "error_rate" | "LCP" | "CLS" | "FID" | "FCP" | "TTFB";
+type DataframeDiffMetricType = `${DataframeBaseMetricType}_diff`;
+type DataframeMetricType = DataframeBaseMetricType | DataframeDiffMetricType | "wilcoxon_signed_rank_test";
+
 export type DataframeMetric = {
   type: "dataframe";
-  metric: "latency" | "throughput" | "error_rate";
+  metric: DataframeMetricType;
   value: number;
   unit: string | null;
   specifier: string | null;
 };
 
+type TimeSeriesBaseMetricType = "latency" | "throughput" | "error_rate";
+type TimeSeriesDiffMetricType = `${TimeSeriesBaseMetricType}_diff`;
+type TimeSeriesMetricType = TimeSeriesBaseMetricType | TimeSeriesDiffMetricType;
+
 export type TimeSeriesMetric = {
   type: "time_series";
-  metric: "latency" | "throughput" | "error_rate";
+  metric: TimeSeriesMetricType;
   timestamps: number[];
   values: number[];
   unit?: string;
@@ -24,6 +32,7 @@ export type BenchmarkMetadata = {
   runConfig?: Run;
   githubToken?: string;
   api?: API;
+  experimentRunId?: number;
 };
 
 export type ExecResult =
@@ -37,6 +46,7 @@ export type ExecResult =
     };
 
 export type ExecFn = (cmd: string) => Promise<ExecResult>;
+export type WriteFileFn = (path: string, content: string) => Promise<boolean>;
 
 export type BenchmarkDependency<T extends string> = {
   name: T;
@@ -44,14 +54,23 @@ export type BenchmarkDependency<T extends string> = {
   getCheckIfInstalledCMD: () => string;
 };
 
+export type DuetResult = {
+  metrics: Metric[];
+  samples: {
+    old: TimeSeriesMetric;
+    latest: TimeSeriesMetric;
+  }[];
+}
+
 export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   tool: T;
   config: O;
-  dependsOn?: ("go" | "node" | "make")[];
+  dependsOn?: ("go" | "node" | "make" | "k6")[];
 
   setup: (options: {
     isLocal: boolean;
     exec: ExecFn;
+    writeFile: WriteFileFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<
@@ -67,6 +86,7 @@ export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   run: (options: {
     isLocal: boolean;
     exec: ExecFn;
+    writeFile: WriteFileFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
   }) => Promise<Metric[]>;
@@ -74,9 +94,10 @@ export interface BenchmarkAdapter<T extends string, O extends z.ZodTypeAny> {
   runDuet?: (options: {
     isLocal: boolean;
     exec: ExecFn;
+    writeFile: WriteFileFn;
     options: z.infer<O>;
     metadata: BenchmarkMetadata;
-  }) => Promise<Metric[]>;
+  }) => Promise<DuetResult>;
 
   teardown?: (options: {
     isLocal: boolean;

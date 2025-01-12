@@ -1,0 +1,44 @@
+name: Frontend Benchmark Puppeteer Adapter Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-puppeteer-adapter:
+    name: Run Puppeteer Adapter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - run: terraform init
+        working-directory: ./infra/angular
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Start Angular
+        id: start-angular
+        working-directory: ./infra/angular
+        run: |
+          TF_VAR_gcp_project=swc-empiris terraform apply -auto-approve
+          ip_address=$(terraform output | grep -oE "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+")
+          echo "IP_ADDRESS=$ip_address" >> $GITHUB_ENV
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Run Puppeteer Benchmark
+        uses: ./
+        with:
+          config_path: configs/empiris.frontend.yml
+        env:
+          api_key: ${{ secrets.EMPIRIS_API_KEY }}
+          MANAGED_CHROME_API_KEY: ${{ secrets.MANAGED_CHROME_API_KEY }}
+      
+      
+      - name: Destroy infra
+        # Make sure infrastructure is destroyed even in case of previous failures
+        if: always()
+        run: TF_VAR_gcp_project=swc-empiris terraform destroy -auto-approve
+        working-directory: ./infra/angular
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}

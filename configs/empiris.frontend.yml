@@ -1,0 +1,15 @@
+name: Frontend Duet Benchmark
+application: duet-frotend-app
+
+api:
+  # base_url: http://host.docker.internal:3000
+  key: "{{ $env.api_key }}"
+
+benchmark:
+  tool: puppeteer
+  duet: true
+  hosts: 
+    - url: http://host.docker.internal:4200
+    - url: http://host.docker.internal:4200
+  chrome_mode: empiris-managed
+  iterations: 5

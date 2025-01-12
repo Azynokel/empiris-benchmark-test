@@ -4,6 +4,7 @@ import { z } from "zod";
 import { waitOn } from "../utils";
 import { parse, stringify } from "yaml";
 import { writeFile } from "fs/promises";
+import { getMetricsWithAI } from "../ai-result-parser";
 
 type ArtilleryHistogramData = {
   min: number;
@@ -69,6 +70,8 @@ async function runArtillery({
   }
 
   const allData = JSON.parse(allDataRaw.stdout);
+
+  await getMetricsWithAI(lastLines.join("\n"));
 
   // Under aggregate.summary we have the keys we want to report
   const data: Record<string, ArtilleryHistogramData> = {};
@@ -193,7 +196,7 @@ export const artilleryAdapter = createAdapter({
   },
   runDuet: async ({
     options: { config_path, hosts, depends_on, report, extensions },
-    metadata: { api },
+    metadata: { api, experimentRunId },
     exec,
   }) => {
     if (hosts.length !== 2) {
@@ -204,15 +207,9 @@ export const artilleryAdapter = createAdapter({
       (ext) => ext.name === "ai-generated-telemetry"
     );
 
-    if (isAiGeneratedTelemetryEnabled && typeof api === "undefined") {
+    if (isAiGeneratedTelemetryEnabled && (typeof experimentRunId === "undefined" || typeof api === "undefined")) {
       throw new Error(
         "The ai-generated-telemetry extension requires the API to be defined"
-      );
-    }
-
-    if (isAiGeneratedTelemetryEnabled) {
-      throw new Error(
-        "The ai-generated-telemetry extension is not implemented yet"
       );
     }
 
@@ -267,7 +264,21 @@ export const artilleryAdapter = createAdapter({
       });
 
       const expandedConfig = {
-        ...parsedConfig.data,
+        config: {
+          ...parsedConfig.data.config,
+          ...(isAiGeneratedTelemetryEnabled
+            ? {
+                http: {
+                  defaults: {
+                    headers: {
+                      "X-EMPIRIS-Experiment-Id": experimentRunId,
+                      "X-EMPIRIS-Api-Key": api?.key,
+                    },
+                  },
+                },
+              }
+            : {}),
+        },
         scenarios: expandedScenarios,
       };
 
@@ -293,7 +304,10 @@ export const artilleryAdapter = createAdapter({
         report,
       });
 
-      return metrics;
+      return {
+        metrics,
+        samples: []
+      }
     } catch (e) {
       throw new Error("Failed to read config: " + e);
     }
