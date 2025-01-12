@@ -41,8 +41,8 @@ jobs:
           # api_key: ${{ secrets.EMPIRIS_API_KEY }}
           # TODO: Remove this hardcoded key
           api_key: sk_2ff793f871240be3aa06738767c499e5
-          host_1: http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8080
-          host_2: http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8090 
+          host_1: "http://${{ env.IP_ADDRESS }}:8080"
+          host_2: "http://${{ steps.start-spring.outputs.IP_ADDRESS }}:8090"
 
       - name: Destroy infra
         # Make sure infrastructure is destroyed even in case of previous failures
