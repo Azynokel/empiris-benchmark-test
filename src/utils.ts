@@ -9,8 +9,12 @@ type WaitOnOptions = {
   delay?: number;
 };
 
-function isStatusOk(response: http.HttpClientResponse) {
-  return response.message.statusCode === 200;
+function isReachable(response: http.HttpClientResponse) {
+  if (!response.message.statusCode) {
+    return false;
+  }
+
+  return (response.message.statusCode >= 200 && response.message.statusCode < 300) || response.message.statusCode === 404;
 }
 
 // Default timeout is 2 minutes
@@ -28,9 +32,9 @@ export async function waitOn({
     const promises = ressources.map((url) => client.get(url));
     try {
       const responses = await Promise.all(promises);
-      const allOk = responses.every((response) => isStatusOk(response));
+      const allReachable = responses.every((response) => isReachable(response));
 
-      if (allOk) {
+      if (allReachable) {
         return;
       }
     } catch (_e) {}
