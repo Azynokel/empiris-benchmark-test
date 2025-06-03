@@ -23,6 +23,6 @@ benchmark:
 platform:
   on: local
 
-visualization:
-  api_key: "{{ $env.api_key }}"
+# visualization:
+#   api_key: "{{ $env.api_key }}"
 # github_token: "{{ $env.github_token }}"
