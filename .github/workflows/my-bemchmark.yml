@@ -1,4 +1,4 @@
-name: Go Microbenchmark
+name: My Go Microbenchmark
 
 on:
   push:
