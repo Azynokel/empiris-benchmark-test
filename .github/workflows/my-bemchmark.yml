@@ -1,4 +1,4 @@
-name: My Go Microbenchmark
+name: Go Microbenchmark
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
         # uses: SWC-EMPIRIS/benchmark-gh-action@main
         uses: ./
         with:
-          config_path: empiris.yml
+          config_path: empiris.micro.yml
         env:
           api_key: ${{ secrets.EMPIRIS_API_KEY }}
           service_account: ${{ secrets.GOOGLE_CREDENTIALS }}
