@@ -35,9 +35,4 @@ jobs:
           ssh_private_key: ${{ secrets.CLOUD_SSH_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
 
-      - name: Upload Benchmark Report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: benchmark-report
-          path: report.json
+
