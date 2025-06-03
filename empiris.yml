@@ -43,7 +43,7 @@ application: go
 benchmark:
   tool: go
   workdir: examples/go
-  package: fib
+  package: ./fib 
 
 platform: # Optional here, the local platform is default. The benchmark will run in the Github Action VM
   on: local
