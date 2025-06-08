@@ -45,17 +45,37 @@ async function getAllBenchmarks(
   let out: string = "";
 
   if (isLocal) {
-    // Change directory to workdir with code
-    process.chdir(workdir);
+    try {
+      // Change directory to workdir with code
+      process.chdir(workdir);
+    } catch (err) {
+      core.error(
+        `Failed to change directory to workdir.\n` +
+        `workdir: ${workdir}\n` +
+        `isLocal: ${isLocal}\n` +
+        `cwd before chdir: ${process.cwd()}\n` +
+        `Error: ${err instanceof Error ? err.message : err}`
+      );
+      return [];
+    }
   }
 
   // Get all benchmarks from the go test command in the workdir
-  const result = isLocal
-    ? await exec(`go test -list Benchmark*`)
-    : await exec(`cd ${workdir} && go test -list Benchmark*`);
+  const command = isLocal
+    ? `go test -list Benchmark*`
+    : `cd ${workdir} && go test -list Benchmark*`;
+
+  const result = await exec(command);
 
   if (!result.success) {
-    core.error("Failed to list benchmarks: " + result.stderr);
+    core.error(
+      `Failed to list benchmarks.\n` +
+      `isLocal: ${isLocal}\n` +
+      `cwd: ${process.cwd()}\n` +
+      `workdir: ${workdir}\n` +
+      `executed command: ${command}\n` +
+      `stderr: ${result.stderr}`
+    );
     return [];
   }
 

@@ -3,8 +3,8 @@ application: go
 
 benchmark:
   tool: go
-  workdir: examples/go/fib
-  package: .
+  workdir: examples/go
+  package: fib
 
 # platform:
 #   on: gcp-vm
