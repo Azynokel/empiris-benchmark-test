@@ -54,12 +54,13 @@ async function localExec(cmd: string) {
       success: false,
       stderr: stderr,
     } as const;
-  } catch (e) {}
-
-  return {
-    success: false,
-    stderr: "Failed to execute command",
-  } as const;
+  } catch (e) {
+    return {
+      success: false,
+      stderr: `Failed to execute command: ${cmd}\n` +
+              `Error: ${e instanceof Error ? e.message : String(e)}`,
+    } as const;
+  }
 }
 
 type SSHConnectParams = {
