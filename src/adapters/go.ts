@@ -60,14 +60,6 @@ async function getAllBenchmarks(
     }
   }
 
-  core.info(`env.PATH: ${process.env.PATH}`);
-
-  const resultTemp1 = await exec(`which go`);
-  core.info(resultTemp1.stdout);
-
-  const resultTemp2 = await exec(`echo $PATH`);
-  core.info(resultTemp2.stdout);
-
   // Get all benchmarks from the go test command in the workdir
   const command = isLocal
     ? `go test -list Benchmark*`
@@ -81,10 +73,8 @@ async function getAllBenchmarks(
       `Failed to list benchmarks.\n` +
       `isLocal: ${isLocal}\n` +
       `cwd: ${process.cwd()}\n` +
-      `workdir: ${workdir}\n` +
       `executed command: ${command}\n` +
-      `stderr: ${result.stderr}\n` +
-      `Directory listing (ls -la):\n${lsResult.stdout || lsResult.stderr}`
+      `stderr: ${result.stderr}\n`
     );
     return [];
   }
