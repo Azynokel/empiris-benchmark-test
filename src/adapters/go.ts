@@ -60,6 +60,11 @@ async function getAllBenchmarks(
     }
   }
 
+  core.info(`env.PATH: ${process.env.PATH}`);
+
+  await exec(`which go`);
+  await exec(`echo $PATH`);
+
   // Get all benchmarks from the go test command in the workdir
   const command = isLocal
     ? `go test -list Benchmark*`
