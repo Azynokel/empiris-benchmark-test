@@ -68,13 +68,15 @@ async function getAllBenchmarks(
   const result = await exec(command);
 
   if (!result.success) {
+    const lsResult = await exec(`ls -la`);
     core.error(
       `Failed to list benchmarks.\n` +
       `isLocal: ${isLocal}\n` +
       `cwd: ${process.cwd()}\n` +
       `workdir: ${workdir}\n` +
       `executed command: ${command}\n` +
-      `stderr: ${result.stderr}`
+      `stderr: ${result.stderr}\n` +
+      `Directory listing (ls -la):\n${lsResult.stdout || lsResult.stderr}`
     );
     return [];
   }
