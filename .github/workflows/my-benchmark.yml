@@ -27,7 +27,8 @@ jobs:
 
       - name: Run Benchmark
         # uses: SWC-EMPIRIS/benchmark-gh-action@main
-        uses: ./
+        # uses: ./
+        uses: Azynokel/empiris-benchmark-test@main
         with:
           config_path: empiris.micro.yml
         env:
