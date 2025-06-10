@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 # Install bun
 RUN curl -fsSL https://bun.sh/install | bash
 
-Install Go
+# Install Go
 ENV GO_VERSION=1.21.1
 RUN apt-get update && \
     apt-get install -y wget tar && \
