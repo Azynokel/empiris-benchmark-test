@@ -6,13 +6,13 @@ WORKDIR /usr/src/app
 # Install bun
 RUN curl -fsSL https://bun.sh/install | bash
 
-# Install Go
-# ENV GO_VERSION=1.21.1
-# RUN apt-get update && \
-#     apt-get install -y wget tar && \
-#     wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
-#     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
-#     rm go${GO_VERSION}.linux-amd64.tar.gz
+Install Go
+ENV GO_VERSION=1.21.1
+RUN apt-get update && \
+    apt-get install -y wget tar && \
+    wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
+    rm go${GO_VERSION}.linux-amd64.tar.gz
 
 # Set up PATH for both Bun and Go
 ENV PATH="/usr/local/go/bin:/root/.bun/bin:${PATH}"
