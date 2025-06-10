@@ -13,15 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Checkout repository
-      #   uses: actions/checkout@v2
-      #   with:
-      #     fetch-depth: 5
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
 
-      # - name: Set up Go
-      #   uses: actions/setup-go@v4
-      #   with:
-      #     go-version: "stable"
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
 
       # Step to provision your SUT (optional if running locally in workflow)
 
