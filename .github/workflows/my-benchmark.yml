@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 5
+      # - name: Checkout repository
+      #   uses: actions/checkout@v2
+      #   with:
+      #     fetch-depth: 5
 
       # - name: Set up Go
       #   uses: actions/setup-go@v4
