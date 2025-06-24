@@ -51,9 +51,6 @@ async function getAllBenchmarks(
     } catch (err) {
       core.error(
         `Failed to change directory to workdir.\n` +
-        `workdir: ${workdir}\n` +
-        `isLocal: ${isLocal}\n` +
-        `cwd before chdir: ${process.cwd()}\n` +
         `Error: ${err instanceof Error ? err.message : err}`
       );
       return [];
@@ -71,8 +68,6 @@ async function getAllBenchmarks(
     const lsResult = await exec(`ls -la`);
     core.error(
       `Failed to list benchmarks.\n` +
-      `isLocal: ${isLocal}\n` +
-      `cwd: ${process.cwd()}\n` +
       `executed command: ${command}\n` +
       `stderr: ${result.stderr}\n`
     );
