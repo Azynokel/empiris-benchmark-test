@@ -477,6 +477,8 @@ export async function main(config?: string) {
       );
     } else {
       core.info("No API key provided, skipping writing results to api");
+      core.info("key: " + api?.key);
+      core.info("experimentRunId: " + experimentRunId);
     }
   }
 }
