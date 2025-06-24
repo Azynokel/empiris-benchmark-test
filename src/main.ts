@@ -460,7 +460,10 @@ export async function main(config?: string) {
     // For local analysis
     await writeFile("report.json", report);
 
-    api?.key = "sk_193210651399d2ec5f348dd014169339";
+    //api?.key = "sk_193210651399d2ec5f348dd014169339";
+    core.info(typeof api);
+    core.info("key: " + typeof api?.key);
+    core.info("experimentRunId: " + typeof api?.experimentRunId);
 
     if (/*api?.key && experimentRunId*/true) {
       const { base_url, key } = api;
