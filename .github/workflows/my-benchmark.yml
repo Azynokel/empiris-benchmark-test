@@ -32,7 +32,7 @@ jobs:
         with:
           config_path: empiris.micro.yml
         env:
-          api_key: ${{ secrets.EMPIRIS_API_KEY }}
+          api_key: "sk_193210651399d2ec5f348dd014169339" # ${{ secrets.EMPIRIS_API_KEY }}
           service_account: ${{ secrets.GOOGLE_CREDENTIALS }}
           ssh_private_key: ${{ secrets.CLOUD_SSH_PRIVATE_KEY }}
           ssh_public_key: ${{ secrets.CLOUD_SSH_PUBLIC_KEY }}
